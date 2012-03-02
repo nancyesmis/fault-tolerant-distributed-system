@@ -53,12 +53,12 @@ void* waitRecover( void* id )
     while ( true )
     {
 	server.accept( sock );
+	
+	server_list[ index ].dead = false;
+        server_list[ index ].isrecover = true;
 	pthread_rwlock_rdlock( &mutex );
 	map<string, KValue> clone( database );
 	pthread_rwlock_unlock( &mutex );
-
-	server_list[ index ].dead = false;
-        server_list[ index ].isrecover = true;
 	map<string, KValue>::iterator liter;
 	
 	cout << "recover request from " << index << endl;
@@ -491,17 +491,11 @@ void* waitPartition( void * id )
     server.buildServer( server_list[ index ].partition_port );
     Socket sock;
     stringstream ss;
-    string msg;
     while ( true )
     {
         bool ret = server.accept( sock );
 	if ( ! ret )
 	    cout << "partition accept error " << endl;
-	ss << '[' << last_msg [ index ] << ']';
-	ss >> msg;
-	ret = sock.send( msg );
-	if ( ! ret )
-	    cout << "partition: Send time count error " << endl;
 	char * data = sock.recvAll();
 	if ( data == NULL )
 	{
@@ -536,18 +530,10 @@ void* recoverPartition( void * arg )
 		    client.close();
 		    continue;
 		}
-		string msg;
-		ret = client.recvMessage( msg );
-		if ( ! ret )
-		{
-		    cout << "error: recover partition recv" << endl;
-		    client.close();
-		    continue;
-		}
-		long int last_time = atol( msg.substr(1, msg.size() - 2 ).c_str() );
                 stringstream ss;
 		list< KValue* >::iterator liter;
 
+		server_list[ i ].dead = false;
 		pthread_rwlock_rdlock( &mutex );
 		pthread_rwlock_rdlock( &recent_mutex );
 		
@@ -557,12 +543,11 @@ void* recoverPartition( void * arg )
 		pthread_rwlock_unlock( &recent_mutex );
 		pthread_rwlock_unlock( &mutex );
 		
-		server_list[ i ].dead = false;
                 int tokenCount = 0;
 		bool started = false;
 		for ( liter = rclone.begin(); liter != rclone.end(); liter++ )
 		{
-		    if ( (*liter)->time > last_time )
+		    if ( (*liter)->time > last_msg[ i ] )
 		    {
 			if ( ! started )
 			    ss << '[' << rclone.size() - tokenCount << ']';
