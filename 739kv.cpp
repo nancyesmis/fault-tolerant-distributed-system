@@ -11,9 +11,18 @@ using namespace std;
 struct kv739_server slist[MAXSERVER];
 int snum;
 
-int hash_server()
+int hash_server(char* str)
 {
-    return 0;
+    unsigned int seed = 131;
+    unsigned int hash = 0;
+    
+    while (*str)
+    {
+	    hash = hash * seed + *str;
+	    str++;
+    }
+ 
+    return (hash & 0x7FFFFFFF) % snum;    
 }
 
 string getValue( const string & feedback )
@@ -22,11 +31,11 @@ string getValue( const string & feedback )
     return feedback.substr( index + 1, feedback.size() - index - 2);
 }
 
-Socket* getSocket()
+Socket* getSocket(char * key)
 {
     Socket* client = new Socket();
     int checked = 0;
-    int index = hash_server();
+    int index = hash_server( key );
     while ( slist[index].dead == true || !client->connect(slist[index].hostname, slist[index].port) )
     {
 	checked ++;
@@ -151,7 +160,7 @@ int kv739_get(char* key, char* value)
 
 int kv739_put(char* key, char* value, char* oldvalue)
 {
-    Socket* client = getSocket();
+    Socket* client = getSocket( key );
     if ( client == NULL )
        return -1;	
     stringstream ss;
