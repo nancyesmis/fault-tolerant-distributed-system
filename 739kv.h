@@ -7,7 +7,7 @@
 /*
  * Initialize the server list
  */
-void kv739_init(char* servers[], int size);
+void kv739_init(char* servers[] );
 
 /*
  * Set a server to be failed, and not to contact it

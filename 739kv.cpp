@@ -9,7 +9,7 @@
 using namespace std;
 
 struct kv739_server slist[MAXSERVER];
-int snum;
+int snum = 0;
 
 int hash_server(char* str)
 {
@@ -50,11 +50,14 @@ Socket* getSocket(char * key)
     return client;
 }
 
-void kv739_init(char* servers[], int size)
+void kv739_init(char* servers[])
 {
-    snum = size;
-    for ( int i = 0; i < size; i++ )
+    snum = 0;
+    for ( int i = 0; i < MAXSERVER; i++ )
     {
+	if ( servers[ i ] == NULL )
+	    break;
+	snum++;
 	string temp = servers[i];
 	size_t pos = temp.find(':');
 	if ( pos == string::npos )
