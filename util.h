@@ -81,6 +81,7 @@ std::vector<std::string>* getLocalIp()
     for( int i = 0; addr_list[i] != NULL; i++ )
     {
 	ips->push_back( inet_ntoa(*addr_list[i]) );
+	std::cout << inet_ntoa(*addr_list[i]) << std::endl;
     }
     return ips;
 }
