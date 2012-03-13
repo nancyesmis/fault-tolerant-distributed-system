@@ -630,7 +630,7 @@ int main(int argc, char** argv)
 {
     getIpAddr();
     init();
-    server_id = argv[1]; //getServerId();
+    server_id = atoi(argv[1]); //getServerId();
     cout << server_id << endl;
     if ( server_id < 0 )
     {
