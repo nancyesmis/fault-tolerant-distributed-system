@@ -1,2 +1,3 @@
-mumble-08.cs.wisc.edu:123451
+mumble-07.cs.wisc.edu:123451
 mumble-16.cs.wisc.edu:123452
+mumble-27.cs.wisc.edu:123453
