@@ -631,11 +631,13 @@ int main(int argc, char** argv)
 {
     init();
     if ( argc > 1 )
-	server_id = atoi(argv[1]);
-    if ( server_id < 0 || server_id >= num_server )
     {
-	cout << " server id error  " << endl;
-	exit(-1);
+	server_id = atoi(argv[1]);
+	if ( server_id < 0 || server_id >= num_server )
+	{
+	    cout << " server id error  " << endl;
+	    exit(-1);
+	}
     }
     else
     {
