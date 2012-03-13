@@ -202,7 +202,8 @@ void init()
 	    cout << "Incorrect config format host:port " << endl;
 	    exit(-1);
 	}
-	server_list[ lnum ].hostname = getIp( line.substr( 0, index ) );
+	//server_list[ lnum ].hostname = getIp( line.substr( 0, index ) );
+	server_list[ lnum ].hostname = line.substr(0, index);
 	if ( server_list[ lnum ].hostname.size() == 0 )
 	    cout << "Incorrect host name " << endl;
 	server_list[ lnum ].port = atoi( line.substr( index + 1, line.size() - index - 1 ).c_str());
@@ -629,8 +630,17 @@ int getServerId( )
 int main(int argc, char** argv)
 {
     init();
-    server_id = atoi(argv[1]);
-    //server_id = getServerId();
+    if ( argc > 1 )
+	server_id = atoi(argv[1]);
+    if ( server_id < 0 || server_id >= num_server )
+    {
+	cout << " server id error  " << endl;
+	exit(-1);
+    }
+    else
+    {
+	server_id = getServerId();
+    }
     cout << server_id << endl;
     if ( server_id < 0 )
     {
@@ -638,7 +648,7 @@ int main(int argc, char** argv)
 	exit(-1);
     }
     startThreads( waitThreads, waitUpdate);
-    if ( argc == 3 && strcmp(argv[2], "recover") == 0 )
+    if ( strcmp(argv[argc - 1], "recover") == 0 )
     {
 	while ( ! recover() )
 	    sleep ( 1 );
