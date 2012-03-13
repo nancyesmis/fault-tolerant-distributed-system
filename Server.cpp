@@ -630,7 +630,7 @@ int main(int argc, char** argv)
 	exit(-1);
     }
     startThreads( waitThreads, waitUpdate);
-    if ( argc == 3 && strcmp(argv[2], "recover") == 0 )
+    if ( argc == 2 && strcmp(argv[1], "recover") == 0 )
     {
 	while ( ! recover() )
 	    sleep ( 1 );
