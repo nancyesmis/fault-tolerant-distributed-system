@@ -599,6 +599,13 @@ void startThreads( pthread_t* ts, void * (func) (void * ) )
    }
 }
 
+string getIpAddr()
+{
+    Socket sock;
+    bool ret = sock.connect("www.google.com", 80 );
+    cout << ret << ";" << sock.getForeignAddr() << endl;
+}
+
 int getServerId( )
 {
     bool notFound = true;
@@ -621,8 +628,9 @@ int getServerId( )
 
 int main(int argc, char** argv)
 {
+    getIpAddr();
     init();
-    server_id = getServerId();
+    server_id = argv[1]; //getServerId();
     cout << server_id << endl;
     if ( server_id < 0 )
     {
@@ -630,7 +638,7 @@ int main(int argc, char** argv)
 	exit(-1);
     }
     startThreads( waitThreads, waitUpdate);
-    if ( argc == 2 && strcmp(argv[1], "recover") == 0 )
+    if ( argc == 3 && strcmp(argv[2], "recover") == 0 )
     {
 	while ( ! recover() )
 	    sleep ( 1 );
