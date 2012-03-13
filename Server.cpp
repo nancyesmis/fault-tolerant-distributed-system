@@ -202,8 +202,8 @@ void init()
 	    cout << "Incorrect config format host:port " << endl;
 	    exit(-1);
 	}
-	//server_list[ lnum ].hostname = getIp( line.substr( 0, index ) );
-	server_list[ lnum ].hostname = line.substr(0, index);
+	server_list[ lnum ].hostname = getIp( line.substr( 0, index ) );
+	//server_list[ lnum ].hostname = line.substr(0, index);
 	if ( server_list[ lnum ].hostname.size() == 0 )
 	    cout << "Incorrect host name " << endl;
 	server_list[ lnum ].port = atoi( line.substr( index + 1, line.size() - index - 1 ).c_str());
