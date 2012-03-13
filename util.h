@@ -4,6 +4,9 @@
 #include <string>
 #include <netdb.h>
 #include <stdlib.h>
+#include <iostream>
+#include <arpa/inet.h>
+#include <vector>
 
 struct kv739_server
 {
@@ -54,6 +57,32 @@ std::string getIp(const std::string& name)
     in_addr* addr = (in_addr* ) remote->h_addr;
     std::string ip = inet_ntoa( *addr );
     return ip;
+}
+
+/*
+ * Get local IP address
+ */
+std::vector<std::string>* getLocalIp()
+{
+    char name[51];
+    std::vector<std::string>* ips = new std::vector<std::string>();
+    if ( gethostname( name, 50 ) == -1 )
+    {
+	std::cout << "gethostname error" << std::endl;
+	return ips;
+    }
+    struct hostent *he;
+    if ( ( he = gethostbyname(name) ) == NULL )
+    {
+	std::cout << "gethostbyname error" << std::endl;
+	return ips;
+    }
+    struct in_addr** addr_list = ( struct in_addr** )he->h_addr_list;
+    for( int i = 0; addr_list[i] != NULL; i++ )
+    {
+	ips->push_back( inet_ntoa(*addr_list[i]) );
+    }
+    return ips;
 }
 
 /*

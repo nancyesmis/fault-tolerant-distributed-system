@@ -28,6 +28,7 @@ void init()
 	strcat( servers[index], server_port );
 	index++;
     }
+    servers[ index ] = NULL;
     iff.close();
 }
 
@@ -42,7 +43,7 @@ int main(int argc, char** argv)
     memset( oldvalue, 0, sizeof(oldvalue) );
     memset( value , 0, sizeof( value ) ); 
     init();
-    kv739_init(servers, 2);
+    kv739_init( servers );
     int index = 0;
     while ( true )
     {

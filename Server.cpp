@@ -599,20 +599,36 @@ void startThreads( pthread_t* ts, void * (func) (void * ) )
    }
 }
 
+int getServerId( )
+{
+    bool notFound = true;
+    vector<string>* ips = getLocalIp();
+    int id = -1;
+    for( int i = 0; i < ips->size() && notFound; i ++ )
+    {
+        for ( int j = 0; j < num_server && notFound; j++ )
+	{
+	    if ( ips->at(i).compare( server_list[j].hostname ) == 0 )
+	    {
+		id = j;
+		notFound = false;
+	    }
+	}
+    }
+    delete ips;
+    return id;
+}
+
 int main(int argc, char** argv)
 {
-    if ( argc < 2 )
-    {
-	cout << "Usage: server id" << endl;
-	exit(-1);
-    }
-    server_id = atoi( argv[1] ) - 1;
-    if ( server_id < 0 || server_id > 3)
-    {
-        cout << "Id should be 1 - " << MAXSERVER << endl;
-	exit(-1);
-    }
     init();
+    server_id = getServerId();
+    cout << server_id << endl;
+    if ( server_id < 0 )
+    {
+	cout << "server id error" << endl;
+	exit(-1);
+    }
     startThreads( waitThreads, waitUpdate);
     if ( argc == 3 && strcmp(argv[2], "recover") == 0 )
     {
