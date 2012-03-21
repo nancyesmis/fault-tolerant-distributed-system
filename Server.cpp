@@ -242,7 +242,7 @@ bool  propagateUpdate(const string& msg, long int id )
    kv739_server* server = &(server_list [ id ]);
    bool ret = false;
    int checkNum = 0;
-   //cout << "propagating " << arg->message << endl;
+   cout << "propagating " << msg << endl;
    if ( pgsocks[id] != NULL )
    {
        client = pgsocks[ id ];
@@ -318,7 +318,7 @@ void* propagateConsumer( void * index )
 	    }
 	}
 	pthread_rwlock_unlock( & pgmutex[id] );
-	usleep(10000);
+	//usleep(10000);
     }	
 }
 
