@@ -242,7 +242,7 @@ bool  propagateUpdate(const string& msg, long int id )
        while ( !( ret = client->connect( server->hostname, server_list[ server_id ].port ) ) )
        {
            client->close();
-	   usleep(1000);
+	   usleep(100);
            if ( ++checkNum > check_fail )
 	       break;
        }
@@ -266,7 +266,7 @@ bool  propagateUpdate(const string& msg, long int id )
    while ( !( ret = client->send( msg ) ) )
    {
        client->close();
-       usleep(1000);
+       usleep(100);
        if ( ++checkNum > check_fail )
 	   break;
    }
@@ -295,7 +295,7 @@ void* propagateConsumer( void * index )
 		cout << "server " << id << " alive " << endl;
 		break;
 	    }
-	    usleep(10000);
+	    usleep(1000);
 	}
 	pthread_rwlock_wrlock( & pgmutex[id] );
 	if ( bufmsg[id].size() > 0 )
