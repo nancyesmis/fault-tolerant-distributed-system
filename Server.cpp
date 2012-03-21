@@ -425,6 +425,7 @@ void start()
 			addPropagate( key, value, timecount);
 		    }
 		    ss >> message;
+		    usleep(100);
 		    suc = sock.send ( message );
 		    if ( ! suc )
 		    {
