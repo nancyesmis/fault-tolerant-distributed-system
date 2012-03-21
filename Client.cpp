@@ -53,7 +53,8 @@ int main(int argc, char** argv)
 	sprintf(key, "%s%d", "key", index);
 	//cout << index << ". sending " <<  value << endl;
 	kv739_put( key, value, oldvalue );
-	usleep(3000);
+	//usleep(3000);
+	//sleep(1);
 	//cin >> key >> value;
     }
 }

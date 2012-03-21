@@ -11,6 +11,7 @@
 #include <pthread.h>
 #include <sys/time.h>
 #include <climits>
+#include <queue>
 
 #define SERVER_PORT 12345
 #define MAXSERVER 4
@@ -23,7 +24,7 @@ kv739_server server_list[ MAXSERVER ];
 Socket* pgsocks[ MAXSERVER ];
 
 pthread_rwlock_t mutex = PTHREAD_RWLOCK_INITIALIZER;
-pthread_rwlock_t recent_mutex = PTHREAD_RWLOCK_INITIALIZER;
+//pthread_rwlock_t recent_mutex = PTHREAD_RWLOCK_INITIALIZER;
 pthread_rwlock_t pgmutex[ MAXSERVER ];
 
 pthread_t waitThreads[ MAXSERVER ];
@@ -34,11 +35,12 @@ pthread_t checkThread;
 pthread_t debugThread;
 pthread_t pingThread;
 
-long int last_msg[ MAXSERVER ];
+queue<string>  bufmsg[ MAXSERVER ];
+//long int last_msg[ MAXSERVER ];
 
 
 //store the recent write message
-list<KValue*> recent_msg;
+//list<KValue*> recent_msg;
 
 
 void* waitRecover( void* id )
@@ -141,17 +143,13 @@ void* waitUpdate(void* id)
 	    values.clear();
 	    curtimes.clear();
 	    getKeyValueTime( message, keys, values, curtimes );
-	   // cout << "message received: " << message  << endl;
 	    pthread_rwlock_wrlock( &mutex );
-	    pthread_rwlock_wrlock( &recent_mutex );
 	    for ( int i = 0; i < keys.size(); i++ )
 	    {
 		string& key = keys[i];
 		string& value = values[i];
 		long int& curtime = curtimes[i];
     		bool update = false;
-		if ( curtime > last_msg[index] )
-		    last_msg[index] = curtime;
 		if ( !(database.find( key ) != database.end()
 		   && curtime < database[ key ].time) )
 		{
@@ -161,12 +159,10 @@ void* waitUpdate(void* id)
 		}
 		if ( update )
 		{
-		    recent_msg.push_back( new KValue( key, curtime ) );
 		    checkRecoverPropagate( message, curtime, index );
 		}
 	    }
 	    pthread_rwlock_unlock( &mutex);
-	    pthread_rwlock_unlock( &recent_mutex );
 
 	}
 	sock.close();
@@ -177,16 +173,11 @@ void checkRecoverPropagate(const string& msg, const long int timecount, const in
 {
     for ( int i = 0; i < num_server; i++ )
     {
-        if ( i != server_id && server_list[ i ].isrecover )
+        if ( i != server_id && ( server_list[ i ].isrecover || server_list[ i ].dead ) )
 	{
-	    thread_arg* arg = new thread_arg();
-	    arg->message = msg;
-	    //cout << "**forward message " << endl;
-	    arg->id = id;
-	    arg->timecount = timecount;
-	    int status = pthread_create( &sendThreads[id], NULL, propagateUpdate, arg );
-	    if ( status != 0 )
-		cout << " creating recover forward thread error" << endl;
+	    pthread_rwlock_wrlock( &pgmutex[i] );
+	    bufmsg[i].push( msg );
+	    pthread_rwlock_unlock( &pgmutex[i] );
 	}
     }
 }
@@ -244,18 +235,16 @@ void init()
     iff.close();
 }
 
-void* propagateUpdate(void * argument )
+bool  propagateUpdate(const string& msg, long int id )
 {
-   thread_arg* arg = (thread_arg* )argument;
-   pthread_rwlock_wrlock( &pgmutex[ arg->id ] );
    Socket* client;
-   kv739_server* server = &(server_list [ arg->id ]);
+   kv739_server* server = &(server_list [ id ]);
    bool ret = false;
    int checkNum = 0;
    //cout << "propagating " << arg->message << endl;
-   if ( pgsocks[arg->id] != NULL )
+   if ( pgsocks[id] != NULL )
    {
-       client = pgsocks[ arg->id ];
+       client = pgsocks[ id ];
    }
    else
    {
@@ -269,16 +258,14 @@ void* propagateUpdate(void * argument )
        }
        if ( ! ret )
        {
-           server_list[ arg->id ].dead = true;
-           cout << "Server " << arg->id << " is dead"  << endl;
+           server_list[ id ].dead = true;
+           cout << "Server " << id << " is dead"  << endl;
            client->close();
-           delete arg;
-	   pthread_rwlock_unlock( &pgmutex[ arg->id ] );
-           return NULL;
+           return false;
        }
        else
        {
-           pgsocks[ arg->id ] = client;
+           pgsocks[ id ] = client;
        }
    }
    if ( ! client->setTimeout(1, 3) )
@@ -286,7 +273,7 @@ void* propagateUpdate(void * argument )
    checkNum = 0;
    if (  ! client->setTimeout(1, 3) )
 	cout << "propagate timeout restart " << endl;
-   while ( !( ret = client->send( arg->message ) ) )
+   while ( !( ret = client->send( msg ) ) )
    {
        client->close();
        usleep(1000);
@@ -295,18 +282,46 @@ void* propagateUpdate(void * argument )
    }
    if ( ! ret )
    {
-       server_list[ arg->id ].dead = true;
-       delete pgsocks[ arg->id ];
-       pgsocks[ arg->id ] = NULL;
-       cout << "Server  " << arg->id << " is dead" << endl;
-       delete arg;
-       pthread_rwlock_unlock( &pgmutex[ arg->id ] );
-       return NULL;
+       server_list[ id ].dead = true;
+       delete pgsocks[ id ];
+       pgsocks[ id ] = NULL;
+       cout << "Server  " << id << " is dead" << endl;
+       return false;
    }
-   pthread_rwlock_unlock( &pgmutex[ arg->id ] );
-   delete arg;
+   return true;
 }
 
+void* propagateConsumer( void * index )
+{
+    long id = (long)index;
+    bool ret = false;
+    while ( true )
+    {
+	while ( server_list[id].dead )
+	{
+	    if ( pingServer(id ) )
+	    {
+		server_list[id].dead = false;
+		cout << "server " << id << " alive " << endl;
+		break;
+	    }
+	    usleep(10000);
+	}
+	pthread_rwlock_wrlock( & pgmutex[id] );
+	if ( bufmsg[id].size() > 0 )
+	{
+	    ret = propagateUpdate( bufmsg[id].front() , id );
+	    if ( ret )
+	    {
+	        bufmsg[id].pop(); 
+	    }
+	}
+	pthread_rwlock_unlock( & pgmutex[id] );
+	usleep(10000);
+    }	
+}
+
+/*
 void startPropagateUpdate(const string & message, long int timecount)
 {
     stringstream ss;
@@ -325,12 +340,28 @@ void startPropagateUpdate(const string & message, long int timecount)
 	}
     }
 }
+*/
 
 long int getCount()
 {
     struct timeval cur_time;
     gettimeofday( & cur_time, NULL );
     return ( cur_time.tv_sec - TIME_BASE ) * 1000 + cur_time.tv_usec / 1000;
+}
+
+void addPropagate( const string& msg, long int timecount )
+{
+    stringstream ss;
+    ss << msg << timecount << ']';
+    for ( int i = 0; i < num_server; i++ )
+    {
+	if ( i == server_id )
+	    continue;
+        pthread_rwlock_wrlock( &pgmutex[i] );
+	//cout << "push " << ss.str() << endl;
+	bufmsg[i].push( ss.str() );
+	pthread_rwlock_unlock( &pgmutex[i] );	
+    }
 }
 
 void start()
@@ -384,10 +415,11 @@ void start()
 		    pthread_rwlock_unlock( &mutex );
 		    if ( value.compare( NOVALUE ) != 0 )
 		    {
-			pthread_rwlock_wrlock( & recent_mutex );
-			recent_msg.push_back( new KValue( key, timecount ) );
-			pthread_rwlock_unlock( & recent_mutex );
-			startPropagateUpdate( message , timecount);
+			//pthread_rwlock_wrlock( & recent_mutex );
+			//recent_msg.push_back( new KValue( key, timecount ) );
+			//pthread_rwlock_unlock( & recent_mutex );
+			//startPropagateUpdate( message , timecount);
+			addPropagate(message, timecount);
 		    }
 		    ss >> message;
 		    suc = sock.send ( message );
@@ -420,8 +452,8 @@ bool recover()
 	return false;
     }
     //cout << data << endl;
-    //cout << "*********************************************************************" << endl;
-    last_msg[id] = recoverDatabase( data, false );
+    cout << "*********************************************************************" << endl;
+    recoverDatabase( data, false );
     bool ret = client->send( msg );
     if ( ! ret )
     {
@@ -433,16 +465,12 @@ bool recover()
 
 long int recoverDatabase( char* data, bool ispartition)
 {
-    long int mostrecent = 0;
+    //long int mostrecent = 0;
     char* pos = strtok( data, "]" );
     char* pch1 = NULL;
     char* pch2 = NULL;
     long int timecount = 0;
     pthread_rwlock_wrlock( &mutex );
-    if ( ispartition ) 
-    {
-	pthread_rwlock_wrlock( &recent_mutex );
-    }
     cout << database.size() << endl;
     while ( pos != NULL )
     {
@@ -455,22 +483,15 @@ long int recoverDatabase( char* data, bool ispartition)
 	{
 	    database [ pos ].value = pch1 + 1;
 	    database [ pos ].time = timecount;
-	    if ( timecount > mostrecent )
-		mostrecent = timecount;
-	    if ( ispartition )
-	    {
-	        recent_msg.push_back( new KValue( pos, timecount ) );		
-	    }
+	    //cout << pos << "->" << database[ pos ].value << endl;
+	    //if ( timecount > mostrecent )
+	    //	mostrecent = timecount;
 	}
 	pos = strtok( NULL, "]" );
     }
-    if ( ispartition )
-    {
-	pthread_rwlock_unlock( &recent_mutex );
-    }
     pthread_rwlock_unlock( &mutex );
     delete data;
-    return mostrecent;
+    return 0;
 }
 
 bool pingServer( int id )
@@ -540,7 +561,7 @@ void* debugFunction( void* arg )
 	}
     }
 }
-
+/*
 void* waitPartition( void * id )
 {
     long index = (long)id;
@@ -582,7 +603,8 @@ void* waitPartition( void * id )
 	sock.close();
     }
 }
-
+*/
+/*
 void* recoverPartition( void * arg )
 {
     while ( true )
@@ -662,6 +684,7 @@ void* recoverPartition( void * arg )
 	sleep( check_period );
     }
 }
+*/
 
 void startThreads( pthread_t* ts, void * (func) (void * ) )
 {
@@ -725,8 +748,9 @@ int main(int argc, char** argv)
     }
     pthread_create( &debugThread, NULL, debugFunction, NULL );
     pthread_create( &pingThread, NULL, waitPing, NULL );
-    pthread_create( &checkThread, NULL, recoverPartition, NULL );
-    startThreads( partitionThreads, waitPartition );
+    //pthread_create( &checkThread, NULL, recoverPartition, NULL );
+    //startThreads( partitionThreads, waitPartition );
     startThreads( recoverThreads, waitRecover );
+    startThreads( sendThreads, propagateConsumer );
     start();
 }

@@ -159,6 +159,7 @@ void getKeyValueTime( const std::string& message, std::vector<std::string>& key,
 		value.push_back( message.substr( index1 + 1, index2 - index1 - 1 ) );
 		time.push_back( atol( message.substr( index2 + 1, index3 - index2 - 1).c_str() ) );
 		head = index3 + 1;
+		//std::cout << head << ':' << index1 << ':' << index2 << ':' << index3 << std::endl;
 	    }
 	    else
 	    {
@@ -167,5 +168,60 @@ void getKeyValueTime( const std::string& message, std::vector<std::string>& key,
 	}
     }
 }
+
+class Bufque
+{
+
+private:
+    std::string* data;
+    int head;
+    int tail;
+    const int SIZE;
+public:
+    Bufque():SIZE(10000)
+    {
+	head = 0;
+	tail = 0;
+	data = new std::string[SIZE];
+    }
+    std::string front()
+    {
+	if ( empty() )
+	{
+	    std::cout << "queue empty " << std::endl;
+	    return "";
+	}
+	return data[ head ];
+    }
+    void pop()
+    {
+	head = ( head + 1 ) % SIZE;
+    }
+    bool push ( const std::string& msg )
+    {
+	if ( full () )
+	{
+	    std::cout << "queue full " << std::endl;
+	    return false;
+	}
+	data[tail] = msg;
+        tail = ( tail + 1 ) % SIZE;
+    }
+    bool empty()
+    {
+	return head == tail;
+    }
+    bool full()
+    {
+	return  ( tail + 1 ) % SIZE == head;
+    }
+    int size()
+    {
+	int ret = tail - head;
+	if ( ret < 0 )
+	    ret += SIZE;
+	return ret;
+    }
+};
 
 #endif

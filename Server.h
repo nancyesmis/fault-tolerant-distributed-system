@@ -30,7 +30,7 @@ void startPropagateUpdate(const std::string& message);
 /*
  * Thread function to send updates to other servers
  */
-void* propagateUpdate(void *);
+bool propagateUpdate(const std::string& msg, long int timecount);
 
 /*
  * thread function wait the updates from other server
@@ -77,6 +77,11 @@ void* waitPing( void * arg );
  * ping the server with id
  */
 bool pingServer( int id );
+
+/*
+ * Add message to propagate queue
+ */
+void addPropagate( const std::string& msg, long int timecount );
 
 /*
  * Debug thread
