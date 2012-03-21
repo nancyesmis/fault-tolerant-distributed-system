@@ -318,7 +318,7 @@ void* propagateConsumer( void * index )
 	    }
 	}
 	pthread_rwlock_unlock( & pgmutex[id] );
-	usleep(100);
+	//usleep(100);
     }	
 }
 
