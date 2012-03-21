@@ -49,9 +49,11 @@ int main(int argc, char** argv)
     {
 	index++;
 	sprintf(value, "%s%d", "value", index );
-	sprintf(key, "%s%d", "key", index);
+	sprintf(key, "%s%d", "key", index % 10);
 	//cout << index << ". sending " <<  value << endl;
 	kv739_put( key, value, oldvalue );
+	kv739_get( key, value );
+	cout << oldvalue << ';' << value << endl;
 	//usleep(3000);
 	//sleep(1);
 	//cin >> key >> value;

@@ -350,10 +350,10 @@ long int getCount()
     return ( cur_time.tv_sec - TIME_BASE ) * 1000 + cur_time.tv_usec / 1000;
 }
 
-void addPropagate( const string& msg, long int timecount )
+void addPropagate( const string& key, const string& value, long int timecount )
 {
     stringstream ss;
-    ss << msg << timecount << ']';
+    ss << key << '[' << value << ']'  << timecount << ']';
     for ( int i = 0; i < num_server; i++ )
     {
 	if ( i == server_id )
@@ -392,12 +392,14 @@ void start()
 		//cout << message << endl;
 		keys.clear();
 		values.clear();
+		bool propagated = false;
 		getKeyValue(message, keys, values);
 		ss.clear();
 		for( int i = 0; i < keys.size(); i ++ )
 		{
 		    string& key = keys[i];
 		    string& value = values[i];
+		    cout << "key " << key << "; value" << value << endl;
 		    long int timecount = getCount();
 		    pthread_rwlock_wrlock( &mutex );
 		    if ( database.find( key ) != database.end() )
@@ -408,19 +410,19 @@ void start()
 		    {
 			ss << "[[]]" << endl;
 		    }
-		    if ( value.compare( NOVALUE ) != 0 )
+		    if ( value.size() != 0 )
 		    {
 			database[ key ].value = value;
 			database[ key ].time = timecount;
 		    }
 		    pthread_rwlock_unlock( &mutex );
-		    if ( value.compare( NOVALUE ) != 0 )
+		    if ( value.size() != 0 )
 		    {
 			//pthread_rwlock_wrlock( & recent_mutex );
 			//recent_msg.push_back( new KValue( key, timecount ) );
 			//pthread_rwlock_unlock( & recent_mutex );
-			//startPropagateUpdate( message , timecount);
-			addPropagate(message, timecount);
+			//startPropagateUpdate( message , timecount);                       
+			addPropagate( key, value, timecount);
 		    }
 		    ss >> message;
 		    suc = sock.send ( message );

@@ -81,7 +81,7 @@ bool pingServer( int id );
 /*
  * Add message to propagate queue
  */
-void addPropagate( const std::string& msg, long int timecount );
+void addPropagate( const std::string& key, const std::string& value, long int timecount );
 
 /*
  * Debug thread
