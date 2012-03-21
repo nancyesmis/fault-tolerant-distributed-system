@@ -44,19 +44,45 @@ bool Socket::buildServer( int port )
     if ( ! init() )
     {
         cerr << "Can't initialize socket" << endl;
+	close();
 	return false;
     }
     if ( ! bind(port) )
     {
         cerr << "Can't bind to port " << port << endl;
+	close();
 	return false;
     }
     if ( ! listen() )
     {
 	cerr << "Can't listen to socket" << endl;
+	close();
 	return false;
     }
     return true;
+}
+
+bool Socket::setTimeout( int sec, int type)
+{
+// 1 recv, 2 send, 3 both
+  struct timeval tv;
+  tv.tv_sec = sec;
+  tv.tv_usec = 0;
+  if ( type % 2 == 1 )
+  {
+    if (setsockopt( m_sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,  sizeof tv)) 
+    {
+      return false;
+    }
+  }
+  if ( type >= 2 )
+  {
+    if (setsockopt( m_sock, SOL_SOCKET, SO_SNDTIMEO, (char *)&tv,  sizeof tv)) 
+    {
+      return false;
+    } 
+  }
+  return true;
 }
 
 bool Socket::init()
@@ -65,7 +91,7 @@ bool Socket::init()
 		    SOCK_STREAM,
 		    0 );
 
-  if ( ! valid() )
+  if ( m_sock == -1 )
     return false;
 
 
@@ -73,8 +99,6 @@ bool Socket::init()
   int on = 1;
   if ( setsockopt ( m_sock, SOL_SOCKET, SO_REUSEADDR, ( const char* ) &on, sizeof ( on ) ) == -1 )
     return false;
-
-
   return true;
 
 }
@@ -158,15 +182,18 @@ bool Socket::recvMessage( std::string& s) const
     s = "";
     while ( num > 0 && buf[len- 1] != m_token ) 
     {
-	cout << "recving" << endl;
 	num = recv (buf + len, MAXBUFFER + 1 - len);
 	len += num;
     }
     if ( num == -1 || len == 0)
+    {
 	return false;
+    }
     s = buf;
     if ( buf[ len - 1] != m_token )
+    {
 	return false;
+    }
     return true;
 }
 
@@ -208,11 +235,12 @@ char* Socket::recvAll( )
 	return ret;
     }
     //cout << numbuf << endl;
-    cout << numToken << endl;
+    //cout << numToken << endl;
     //cout << tindex << endl;
     //cout << strlen( numbuf + tindex ) << endl;
-   
+    //cout << numbuf << endl;
     int max = numToken * m_maxToken;
+    //cout << "max: " << max << endl;
     char* buf = new char[ max ];
     memset ( buf, 0, max );
     if ( tindex < numsize )
@@ -225,9 +253,13 @@ char* Socket::recvAll( )
     int countToken = countChar( buf );
     while ( countToken < numToken )
     {
+	//cout << countToken << ';'  << numToken << endl;
         num = recv ( buf + len, max - len );
+	//cout << " each chunk : " << num << endl;
+	countToken += countChar( buf + len );
 	len += num;
-        countToken += countChar( buf + len );
+	if ( num <= 0 )
+	    break;
     }
     if ( num == -1 || len == 0 || buf[ len - 1] != m_token )
     {

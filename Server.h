@@ -20,7 +20,7 @@ void start();
  * @param v, the value to be returned
  */
 
-void getKeyValue(const std::string& m, std::string& k, std::string& v);
+//void getKeyValue(const std::string& m, std::string& k, std::string& v);
 
 /*
  * start the thread to propagate update
@@ -102,5 +102,5 @@ bool recover();
  */
 Socket* chooseRecoverServer(int &id);
 const int check_fail = 3;
-const int check_period = 5;
+const int check_period = 1;
 #endif

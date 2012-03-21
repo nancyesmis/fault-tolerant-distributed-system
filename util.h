@@ -7,6 +7,7 @@
 #include <iostream>
 #include <arpa/inet.h>
 #include <vector>
+#include <ifaddrs.h>
 
 struct kv739_server
 {
@@ -64,7 +65,30 @@ std::string getIp(const std::string& name)
  */
 std::vector<std::string>* getLocalIp()
 {
+
     char name[51];
+    struct ifaddrs* ifaddr, *ifa;
+    std::vector<std::string>* ips = new std::vector<std::string>();
+    if ( getifaddrs( &ifaddr ) == -1 )
+    {
+	std::cout << "getifaddrs error" << std::endl;
+	return NULL;
+    }
+    for ( ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next )
+    {
+	if ( ifa->ifa_addr == NULL )
+	    continue;
+	int family = ifa->ifa_addr->sa_family;
+	if ( family == AF_INET )
+	{
+	    int ret = getnameinfo( ifa->ifa_addr, sizeof( struct sockaddr_in ), name, NI_MAXHOST,
+	    NULL, 0, NI_NUMERICHOST);
+	    ips->push_back(name);
+	    std::cout << name << std::endl;
+	}
+    }
+    return ips;
+/*    char name[51];
     std::vector<std::string>* ips = new std::vector<std::string>();
     if ( gethostname( name, 50 ) == -1 )
     {
@@ -84,28 +108,64 @@ std::vector<std::string>* getLocalIp()
 	std::cout << inet_ntoa(*addr_list[i]) << std::endl;
     }
     return ips;
+    */
 }
 
 /*
  * Extract key, value from message
  */
-void getKeyValue( const std::string& message, std::string& key, std::string& value)
+void getKeyValue( const std::string& message, std::vector<std::string>& key, std::vector<std::string>& value)
 {
-    size_t index = message.find('[');
-    key = message.substr(0, index);
-    value = message.substr( index + 1, message.size() - index - 2);
+    size_t head = 0;
+    size_t index1 = 0; 
+    size_t index2 = 0; 
+    for ( size_t i = 0; i < message.size(); i++ )
+    {
+	if ( message[i] == '[' )
+	{
+	    index1 = i;
+	}
+	else if ( message[i] == ']' )
+	{
+	    index2 = i;
+	    key.push_back( message.substr( head, index1 - head ) );
+	    value.push_back( message.substr( index1 + 1, index2 - index1 - 1 ) );
+	    head = index2 + 1;
+	}
+    }
 }
 
 /*
  * Extract key, value, time from message
  */
-void getKeyValueTime( const std::string& message, std::string& key, std::string& value, long int& time)
+void getKeyValueTime( const std::string& message, std::vector<std::string>& key, std::vector<std::string>& value, std::vector<long int>& time)
 {
-    size_t index = message.find('[');
-    key = message.substr(0, index);
-    size_t second = message.find(']');
-    value = message.substr( index + 1, second - index - 1);
-    time = atol(message.substr( second + 1, message.size() - second - 2 ).c_str() );
+    size_t head = 0;
+    size_t index1 = 0;
+    size_t index2 = 0;
+    size_t index3 = 0;
+    for( size_t i = 0; i < message.size(); i++ )
+    {
+	if ( message[i] == '[' )
+	{
+	    index1 = i;
+	}
+	else if ( message[i] == ']' )
+	{
+	    if ( index2 > index3 )
+	    {
+		index3 = i;
+		key.push_back( message.substr( head, index1 - head ) );
+		value.push_back( message.substr( index1 + 1, index2 - index1 - 1 ) );
+		time.push_back( atol( message.substr( index2 + 1, index3 - index2 - 1).c_str() ) );
+		head = index3 + 1;
+	    }
+	    else
+	    {
+		index2 = i;
+	    }
+	}
+    }
 }
 
 #endif

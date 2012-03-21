@@ -9,7 +9,23 @@
 using namespace std;
 
 struct kv739_server slist[MAXSERVER];
+Socket* socks[MAXSERVER];
+
 int snum = 0;
+
+void setSockNull(Socket* sock)
+{
+    for ( int i = 0; i < MAXSERVER; i++ )
+    {
+	if ( socks[i] == sock )
+	{
+	    socks[i] = NULL;
+	    delete sock;
+	    return;
+	}
+    }
+    cout << "error no sock found " << endl; 
+}
 
 int hash_server(char* str)
 {
@@ -33,20 +49,45 @@ string getValue( const string & feedback )
 
 Socket* getSocket(char * key)
 {
-    Socket* client = new Socket();
-    int checked = 0;
     int index = hash_server( key );
-    while ( slist[index].dead == true || !client->connect(slist[index].hostname, slist[index].port) )
+    int checked = 0;
+    Socket* client = NULL;
+    while ( true )
     {
-	checked ++;
-	index = ( index + 1 ) % snum;
-	if ( checked >= snum )
+	checked++;
+	if ( checked > snum )
 	{
 	    cout << "No server is available " << endl;
-	    delete client;
-	    return NULL;
+	    return NULL;	    
 	}
+	if ( slist[index].dead )
+	{
+	    index = ( index + 1 ) % snum;
+	    continue;
+	}	
+	if ( socks[index] != NULL )
+	{
+	    return socks[index];
+	}
+	else
+	{
+	    client = new Socket();
+	    bool ret = client->connect(slist[index].hostname, slist[index].port);
+	    if ( !ret )
+	    {
+		delete client;   
+	    }
+	    else
+	    {
+		break;
+	    }
+	}
+	index = ( index + 1 ) % snum;
     }
+
+    if ( ! client->setTimeout(1, 3) )
+	cout << "set timeout unsuccessfull" <<endl;
+    socks[ index ] = client;
     return client;
 }
 
@@ -58,6 +99,7 @@ void kv739_init(char* servers[])
 	if ( servers[ i ] == NULL )
 	    break;
 	snum++;
+	socks[i] = NULL;
 	string temp = servers[i];
 	size_t pos = temp.find(':');
 	if ( pos == string::npos )
@@ -72,6 +114,7 @@ void kv739_init(char* servers[])
 	slist[i].dead = false;
 	temp = temp.substr(pos + 1, temp.size() - pos);
 	slist[i].port = atoi(temp.c_str());
+
 	//cout << i << slist[i].port << endl;
     }
     return;
@@ -127,42 +170,13 @@ void kv739_recover(char* server)
 
 int kv739_get(char* key, char* value)
 {
-    return kv739_put( key, const_cast<char* >(C_NOVALUE), value );
+    return kv739_put( key, const_cast<char*>(""), value );
 }
 
-/*
-int kv739_get(char* key, char* value)
-{
-    Socket* client = getSocket();
-    if ( client == NULL )
-	return -1;
-    string message;
-    bool ret = client->recvMessage( message );
-    if ( ! ret )
-    {
-        cout << "Receiving error " << endl;
-	delete client;
-	return -1;
-    }
-    string mv = getValue( message );
-    if ( mv.compare( NOVALUE ) == 0 )
-    {
-	delete client;
-	return 1;
-    }
-    if ( mv.size() > MAXBUFFER )
-    {
-	delete client;
-	return -1;
-    }
-    strcpy( value, mv.c_str() );
-    delete client;
-    return 0;
-}
-*/
 
 int kv739_put(char* key, char* value, char* oldvalue)
 {
+    cout << "sending " << key << ':' << value << endl;
     Socket* client = getSocket( key );
     if ( client == NULL )
        return -1;	
@@ -171,27 +185,26 @@ int kv739_put(char* key, char* value, char* oldvalue)
     bool ret = client->send( ss.str() );
     if ( ! ret )
     {
-        cout << "Sending error" << endl;
-	delete client;
-	return -1;
+        cout << "Sending restart" << endl;
+	setSockNull(client);
+	return kv739_put(key, value, oldvalue);
     }
     string feedback;
     ret = client->recvMessage( feedback );
     if ( ! ret )
     {
-        cout << "Receiving error " << endl;
-	delete client;
-	return -1;
+	cout << feedback << endl;
+        cout << "Receiving restart " << endl;
+	setSockNull(client);
+	return kv739_put(key, value, oldvalue);
     }
     string ov = getValue( feedback );
     if ( ov.compare(NOVALUE) == 0 )
     {
-	delete client;
 	return 1;
     }
     //may need to check overflow
     strcpy( oldvalue, ov.c_str() );
-    delete client;
     return 0;
 }
 

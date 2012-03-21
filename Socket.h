@@ -32,6 +32,12 @@ class Socket
    * Close the socket
    */
   void close();
+  
+  /*
+   * Set the time out of the recv
+   * type 1 recv, 2 send, 3 both
+   */
+  bool setTimeout( int sec, int type );
   /*
    * Initialize for the server socket
    */

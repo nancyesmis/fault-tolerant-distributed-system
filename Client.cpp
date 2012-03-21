@@ -40,20 +40,20 @@ int main(int argc, char** argv)
     char* key = new char[200];
     int port = 12345;
     cout << sizeof(oldvalue) << endl;
-    memset( oldvalue, 0, sizeof(oldvalue) );
-    memset( value , 0, sizeof( value ) ); 
+    memset( oldvalue, 0, 200 );
+    memset( value , 0, 2000 ); 
     init();
     kv739_init( servers );
     int index = 0;
+
     while ( true )
     {
-	cin >> key >> value;
 	index++;
+	sprintf(value, "%s%d", "value", index );
+	sprintf(key, "%s%d", "key", index);
+	//cout << index << ". sending " <<  value << endl;
 	kv739_put( key, value, oldvalue );
-	cout << oldvalue << endl;
-	kv739_get( key, oldvalue );
-	cout << oldvalue << endl;
-        cout << index << endl;
-	sleep(1);
+	usleep(3000);
+	//cin >> key >> value;
     }
 }
