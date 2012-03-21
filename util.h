@@ -12,6 +12,7 @@
 struct kv739_server
 {
     std::string hostname;
+    int cport;
     int port;
     int ping_port;
     int recover_port;

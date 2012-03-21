@@ -217,10 +217,11 @@ void init()
 	//server_list[ lnum ].hostname = line.substr(0, index);
 	if ( server_list[ lnum ].hostname.size() == 0 )
 	    cout << "Incorrect host name " << endl;
-	server_list[ lnum ].port = atoi( line.substr( index + 1, line.size() - index - 1 ).c_str());
-	server_list[ lnum ].ping_port = server_list[ lnum ].port + 10;
-	server_list[ lnum ].recover_port = server_list [ lnum ].port + 20;
-	server_list[ lnum ].partition_port = server_list [ lnum ].port + 30;
+	server_list[ lnum ].cport = atoi( line.substr( index + 1, line.size() - index - 1 ).c_str());
+	server_list[ lnum ].port = server_list[ lnum ].cport + 111;
+	server_list[ lnum ].ping_port = server_list[ lnum ].port + 221;
+	server_list[ lnum ].recover_port = server_list [ lnum ].port + 331;
+	server_list[ lnum ].partition_port = server_list [ lnum ].port + 441;
 	server_list[ lnum ].dead = false;
 	server_list[ lnum ].isrecover = false;
 
@@ -368,7 +369,7 @@ void start()
 {
     map<string, KValue>::iterator iter;
     Socket server;
-    server.buildServer( SERVER_PORT );
+    server.buildServer( server_list[ server_id ].cport );
     string NOVALUE = "[]";
     Socket sock;
     int num = 0;

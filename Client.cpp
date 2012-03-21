@@ -23,9 +23,7 @@ void init()
     while ( iff >> line )
     {
 	servers[index] = new char[50];
-        size_t pos = line.find(':');
-	strcpy( servers[index], line.substr(0, pos + 1).c_str() );
-	strcat( servers[index], server_port );
+	strcpy( servers[index], line.c_str() );
 	index++;
     }
     servers[ index ] = NULL;
