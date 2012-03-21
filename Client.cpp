@@ -43,17 +43,31 @@ int main(int argc, char** argv)
     memset( value , 0, 2000 ); 
     init();
     kv739_init( servers );
-    int index = 0;
-
+    int index = -1;
+    int keyid = 0;
     while ( true )
     {
 	index++;
-	sprintf(value, "%s%d", "value", index );
-	sprintf(key, "%s%d", "key", index % 10);
+	sprintf(value, "%d", index );
+	if ( index % 100 == 0 )
+	    sprintf(key, "%s%d", "key", keyid++);
 	//cout << index << ". sending " <<  value << endl;
+	/*
+	for( int i = 0; i < 4; i++ )
+	{
+	    if ( i == index % 4 )
+		kv739_recover( servers[i] );
+	    else
+		kv739_fail( servers[i] );	    
+	}
+	*/
+	//kv739_recover( servers[ (index + 1) % 2] );
 	kv739_put( key, value, oldvalue );
-	kv739_get( key, value );
-	cout << oldvalue << ';' << value << endl;
+	if ( atoi(value ) - atoi(oldvalue) != 1 && atoi(value) % 100 != 0)
+	{
+	    cout << oldvalue << ":" << value << endl;
+	    cout << "inconsistency " << endl;
+	}
 	//usleep(3000);
 	//sleep(1);
 	//cin >> key >> value;

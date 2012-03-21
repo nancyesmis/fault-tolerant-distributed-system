@@ -14,15 +14,6 @@ void init();
 void start();
 
 /*
- * Get the key and value from the message
- * @param m, the message
- * @param k, the key to be returned
- * @param v, the value to be returned
- */
-
-//void getKeyValue(const std::string& m, std::string& k, std::string& v);
-
-/*
  * start the thread to propagate update
  */
 void startPropagateUpdate(const std::string& message);

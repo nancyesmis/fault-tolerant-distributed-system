@@ -136,7 +136,7 @@ void kv739_fail(char* server)
     {
 	if ( slist[i].hostname.compare(host) == 0 && slist[i].port == port )
 	{
-	    slist[i].dead = true;
+	    slist[i].dead = false;
 	    return;
 	}
     }
@@ -176,7 +176,7 @@ int kv739_get(char* key, char* value)
 
 int kv739_put(char* key, char* value, char* oldvalue)
 {
-    cout << "sending " << key << ':' << value << endl;
+    //cout << "sending " << key << ':' << value << endl;
     Socket* client = getSocket( key );
     if ( client == NULL )
        return -1;	
