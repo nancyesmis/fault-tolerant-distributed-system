@@ -242,7 +242,7 @@ bool  propagateUpdate(const string& msg, long int id )
    kv739_server* server = &(server_list [ id ]);
    bool ret = false;
    int checkNum = 0;
-   cout << "propagating " << msg << endl;
+   //cout << "propagating " << msg << endl;
    if ( pgsocks[id] != NULL )
    {
        client = pgsocks[ id ];
