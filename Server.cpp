@@ -34,6 +34,7 @@ pthread_t propaThreads[ MAXSERVER ];
 pthread_t checkThread;
 pthread_t debugThread;
 pthread_t pingThread;
+pthread_t reqThread;
 
 queue<string>  bufmsg[ MAXSERVER ];
 
@@ -392,25 +393,16 @@ void waitUntilAll(int iter )
     }
 }
 
-void start()
+void* processreq(void * s)
 {
-    map<string, KValue>::iterator iter;
-    Socket server;
-    server.buildServer( server_list[ server_id ].cport );
-    string NOVALUE = "[]";
-    Socket sock;
-    int num = 0;
+    Socket* sock = (Socket*)s;
     string message;
     vector<string> keys;
     vector<string> values;
     stringstream ss;
-    while ( true )
-    {
-	server.accept ( sock );
-	sock.setTimeout(1, 2);
-	while ( true )
+    	while ( true )
 	{
-		bool suc = sock.recvMessage( message );
+		bool suc = sock->recvMessage( message );
 		//cout << message << endl;
 		if ( ! suc )
 		{
@@ -450,17 +442,33 @@ void start()
 		    ss >> message;
 		    //waitUntilAll(10);
 		    //usleep(100);
-		    suc = sock.send ( message );
+		    suc = sock->send ( message );
 		    //gettimeofday( &cur, NULL);
 		    //cout << " returned " << value << cur.tv_sec << ":" << cur.tv_usec << endl;
 		    if ( ! suc )
 		    {
 			cout << " Server send restart" << endl;
-			sock.close();
 			break;
 		    }
 		}
 	}
+	delete sock;
+}
+
+
+void start()
+{
+    map<string, KValue>::iterator iter;
+    Socket server;
+    server.buildServer( server_list[ server_id ].cport );
+    string NOVALUE = "[]";
+    int num = 0;
+    while ( true )
+    {
+	Socket* sock = new Socket();
+	server.accept ( *sock );
+	sock->setTimeout(1, 2);
+	pthread_create( &reqThread, NULL, processreq, (void*)sock);
     }
 }
 

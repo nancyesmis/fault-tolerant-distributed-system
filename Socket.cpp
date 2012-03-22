@@ -93,7 +93,7 @@ bool Socket::init()
 
   if ( m_sock == -1 )
     return false;
-  //setBlocking( false );
+  setBlocking( true );
 
 
   // TIME_WAIT - argh

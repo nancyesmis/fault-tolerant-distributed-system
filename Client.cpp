@@ -57,9 +57,9 @@ int main(int argc, char** argv)
 	    sprintf(key, "%s%d", "key", keyid++);
 	//cout << index << ". sending " <<  value << endl;
 	
-	for( int i = 0; i < 4; i++ )
+	for( int i = 0; i < 2; i++ )
 	{
-	    if ( i == index % 4  )
+	    if ( i == index % 2  )
 		kv739_recover( servers[i] );
 	    else
 		kv739_fail( servers[i] );	    
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 	//cout << "before put " << endl;
 	kv739_put( key, value, oldvalue );
 	//cout << oldvalue << endl;
-	//cout << value << endl;
+	cout << value << endl;
 	if ( atoi(value ) - atoi(oldvalue) != 1 && atoi(value) % 100 != 0 && strlen(oldvalue) > 1)
 	{
 	    cout << oldvalue << ":" << value << endl;
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 	    cout << end.tv_sec - start.tv_sec << ":" << end.tv_usec - start.tv_usec << endl;
 	}
 	//usleep(500000);
-	//sleep(1);
+	sleep(1);
 	//cin >> key >> value;
     }
 }
