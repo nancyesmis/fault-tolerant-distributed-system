@@ -13,7 +13,6 @@
 #include <climits>
 #include <queue>
 
-#define SERVER_PORT 12345
 #define MAXSERVER 4
 using namespace std;
 
@@ -349,7 +348,6 @@ void waitUntilAll(int iter )
 	    }
 	}
 	usleep(100);
-	//cout << "waiting " << endl;
 	index++;
 	if ( index > iter )
 	    return;
@@ -608,7 +606,7 @@ int main(int argc, char** argv)
 	while ( ! recover() )
 	    sleep ( 1 );
     }
-    pthread_create( &debugThread, NULL, debugFunction, NULL );
+    //pthread_create( &debugThread, NULL, debugFunction, NULL );
     pthread_create( &pingThread, NULL, waitPing, NULL );
     startThreads( recoverThreads, waitRecover );
     startThreads( sendThreads, propagateConsumer );

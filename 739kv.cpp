@@ -60,11 +60,6 @@ Socket* getSocket(char * key)
 	    cout << "No server is available " << endl;
 	    return NULL;	    
 	}
-	if ( slist[index].dead )
-	{
-	    index = ( index + 1 ) % snum;
-	    continue;
-	}	
 	if ( socks[index] != NULL )
 	{
 	    return socks[index];
@@ -85,8 +80,7 @@ Socket* getSocket(char * key)
 	index = ( index + 1 ) % snum;
     }
 
-    if ( ! client->setTimeout(1, 3) )
-	cout << "set timeout unsuccessfull" <<endl;
+    client->setTimeout(1, 3);
     socks[ index ] = client;
     return client;
 }
@@ -114,8 +108,6 @@ void kv739_init(char* servers[])
 	slist[i].dead = false;
 	temp = temp.substr(pos + 1, temp.size() - pos);
 	slist[i].port = atoi(temp.c_str());
-
-	//cout << i << slist[i].port << endl;
     }
     return;
 }
@@ -193,7 +185,7 @@ int kv739_put(char* key, char* value, char* oldvalue)
     ret = client->recvMessage( feedback );
     if ( ! ret )
     {
-	cout << feedback << endl;
+	//cout << feedback << endl;
         cout << "Receiving restart " << endl;
 	setSockNull(client);
 	return kv739_put(key, value, oldvalue);
@@ -203,7 +195,6 @@ int kv739_put(char* key, char* value, char* oldvalue)
     {
 	return 1;
     }
-    //may need to check overflow
     strcpy( oldvalue, ov.c_str() );
     return 0;
 }
