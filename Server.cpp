@@ -332,6 +332,30 @@ void addPropagate( const string& key, const string& value, long int timecount )
     }
 }
 
+void waitUntilAll(int iter )
+{
+    int index = 0;
+    while ( true )
+    {
+	bool end = true;
+	for ( int i = 0; i < num_server; i++ )
+	{
+	    if ( i == server_id )
+		continue;
+	    if ( bufmsg[i].size() > 0 && ! server_list[i].dead )
+	    {
+		end = false;
+		break;
+	    }
+	}
+	usleep(100);
+	//cout << "waiting " << endl;
+	index++;
+	if ( index > iter )
+	    return;
+    }
+}
+
 void start()
 {
     map<string, KValue>::iterator iter;
@@ -351,11 +375,13 @@ void start()
 	while ( true )
 	{
 		bool suc = sock.recvMessage( message );
+		cout << message << endl;
 		if ( ! suc )
 		{
 		    cout << "Receiving restart " << endl;
 		    break;
 		}
+		//cout << message << endl;
 		keys.clear();
 		values.clear();
 		bool propagated = false;
@@ -386,6 +412,7 @@ void start()
 			addPropagate( key, value, timecount);
 		    }
 		    ss >> message;
+		    //waitUntilAll(10);
 		    usleep(100);
 		    suc = sock.send ( message );
 		    if ( ! suc )

@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     {
 	index++;
 	sprintf(value, "%d", index );
-	if ( index % 100 == 0 )
+	//if ( index % 100 == 0 )
 	    sprintf(key, "%s%d", "key", keyid++);
 	//cout << index << ". sending " <<  value << endl;
 	/*
@@ -62,13 +62,15 @@ int main(int argc, char** argv)
 	}
 	*/
 	//kv739_recover( servers[ (index + 1) % 2] );
+	//cout << "before put " << endl;
 	kv739_put( key, value, oldvalue );
+	cout << oldvalue << endl;
 	if ( atoi(value ) - atoi(oldvalue) != 1 && atoi(value) % 100 != 0)
 	{
-	    cout << oldvalue << ":" << value << endl;
-	    cout << "inconsistency " << endl;
+	    //cout << oldvalue << ":" << value << endl;
+	    //cout << "inconsistency " << endl;
 	}
-	//usleep(3000);
+	usleep(500000);
 	//sleep(1);
 	//cin >> key >> value;
     }

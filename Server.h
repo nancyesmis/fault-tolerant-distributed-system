@@ -28,6 +28,8 @@ bool propagateUpdate(const std::string& msg, long int timecount);
  */
 void* waitUpdate(void* arg);
 
+void waitUntilAll(int iter);
+
 /*
  * start the threads to wait for updates from other servers
  */
