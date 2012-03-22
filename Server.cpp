@@ -57,8 +57,8 @@ void* waitRecover( void* id )
     {
 	server.accept( sock );
 	
-	server_list[ index ].dead = false;
-        server_list[ index ].isrecover = true;
+	//server_list[ index ].dead = false;
+        //server_list[ index ].isrecover = true;
 	pthread_rwlock_rdlock( &mutex );
 	map<string, KValue> clone( database );
 	pthread_rwlock_unlock( &mutex );
@@ -84,7 +84,7 @@ void* waitRecover( void* id )
 	{
 	    cout << "Receving ack from recover restart" << endl;
 	}
-	server_list[ index ].isrecover = false;
+	//server_list[ index ].isrecover = false;
 	sock.close();
     }
 }
@@ -178,7 +178,7 @@ void checkRecoverPropagate(const string& msg, const long long timecount, const i
 {
     for ( int i = 0; i < num_server; i++ )
     {
-        if ( i != server_id && ( server_list[ i ].isrecover || server_list[ i ].dead ) )
+        if ( i != server_id && server_list[ i ].dead )
 	{
 	    pthread_rwlock_wrlock( &pgmutex[i] );
 	    bufmsg[i].push( msg );
@@ -357,9 +357,9 @@ void addPropagate( const string& key, const string& value, long long timecount )
     {
 	if ( i == server_id || server_list[i].dead )
 	    continue;
-	cout << "before join " << i << endl;
+	//cout << "before join " << i << endl;
         pthread_join( propaThreads[i], NULL );
-	cout << "after join " << i << endl;
+	//cout << "after join " << i << endl;
 	if ( server_list[i].dead )
 	{
 	    //cout << "add to buffer queue " << endl;

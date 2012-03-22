@@ -53,8 +53,8 @@ int main(int argc, char** argv)
     {
 	index++;
 	sprintf(value, "%d", index );
-	if ( index % 100 == 0 )
-	    sprintf(key, "%s%d", "key", keyid++);
+	//if ( index % 100 == 0 )
+	    sprintf(key, "%s%d", "key", index);
 	//cout << index << ". sending " <<  value << endl;
 	
 	for( int i = 0; i < 2; i++ )
