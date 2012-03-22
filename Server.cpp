@@ -146,7 +146,7 @@ void* waitUpdate(void* id)
 		long int& curtime = curtimes[i];
     		bool update = false;
 		if ( !(database.find( key ) != database.end()
-		   && curtime + 10 < database[ key ].time ) )
+		   && curtime + 2 < database[ key ].time ) )
 		{
 		    database[ key ].value = value;
 		    database[ key ].time = curtime;
@@ -338,7 +338,7 @@ long int getCount()
 {
     struct timeval cur_time;
     gettimeofday( & cur_time, NULL );
-    return ( cur_time.tv_sec - TIME_BASE ) * 10000 + cur_time.tv_usec / 100;
+    return ( cur_time.tv_sec - TIME_BASE ) * 1000 + cur_time.tv_usec / 1000;
 }
 
 void addPropagate( const string& key, const string& value, long int timecount )

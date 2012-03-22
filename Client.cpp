@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 	//cout << "before put " << endl;
 	kv739_put( key, value, oldvalue );
 	//cout << oldvalue << endl;
-	cout << value << endl;
+	//cout << value << endl;
 	if ( atoi(value ) - atoi(oldvalue) != 1 && atoi(value) % 100 != 0 && strlen(oldvalue) > 1)
 	{
 	    cout << oldvalue << ":" << value << endl;
@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 	    cout << end.tv_sec - start.tv_sec << ":" << end.tv_usec - start.tv_usec << endl;
 	}
 	//usleep(500000);
-	sleep(1);
+	//sleep(1);
 	//cin >> key >> value;
     }
 }
