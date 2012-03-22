@@ -185,7 +185,7 @@ int kv739_put(char* key, char* value, char* oldvalue)
     ret = client->recvMessage( feedback );
     if ( ! ret )
     {
-	cout << feedback << endl;
+	//cout << feedback << endl;
         cout << "Receiving restart " << endl;
 	setSockNull(client);
 	return kv739_put(key, value, oldvalue);

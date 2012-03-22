@@ -606,7 +606,7 @@ int main(int argc, char** argv)
 	while ( ! recover() )
 	    sleep ( 1 );
     }
-    pthread_create( &debugThread, NULL, debugFunction, NULL );
+    //pthread_create( &debugThread, NULL, debugFunction, NULL );
     pthread_create( &pingThread, NULL, waitPing, NULL );
     startThreads( recoverThreads, waitRecover );
     startThreads( sendThreads, propagateConsumer );
