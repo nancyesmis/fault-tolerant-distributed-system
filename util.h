@@ -47,7 +47,7 @@ struct KValue
 
 std::string NOVALUE = "[]";
 const char* C_NOVALUE = "[]";
-int TIME_BASE = 1.33e9;
+int TIME_BASE = 1.33245e9;
 /*
  * Get ip address from host name
  */
