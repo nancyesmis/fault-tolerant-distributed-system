@@ -12,6 +12,7 @@
 #include <sys/time.h>
 #include <climits>
 #include <queue>
+#include <inttypes.h>
 
 #define MAXSERVER 4
 using namespace std;
@@ -29,6 +30,7 @@ pthread_t waitThreads[ MAXSERVER ];
 pthread_t sendThreads[ MAXSERVER ];
 pthread_t recoverThreads[ MAXSERVER ];
 pthread_t partitionThreads[ MAXSERVER ];
+pthread_t propaThreads[ MAXSERVER ];
 pthread_t checkThread;
 pthread_t debugThread;
 pthread_t pingThread;
@@ -225,6 +227,17 @@ void init()
     iff.close();
 }
 
+void* dopropagate( void * data )
+{
+   thread_arg* arg = (thread_arg* )data;
+   bool ret = propagateUpdate( arg->message, arg->id );
+   delete arg;
+   uintptr_t v = 0;
+   if ( ret ) 
+       v = 1;
+   return (void*)v;
+}
+
 bool  propagateUpdate(const string& msg, long int id )
 {
    Socket* client;
@@ -241,7 +254,7 @@ bool  propagateUpdate(const string& msg, long int id )
        while ( !( ret = client->connect( server->hostname, server_list[ server_id ].port ) ) )
        {
            client->close();
-	   usleep(100);
+	   usleep(10);
            if ( ++checkNum > check_fail )
 	       break;
        }
@@ -265,7 +278,7 @@ bool  propagateUpdate(const string& msg, long int id )
    while ( !( ret = client->send( msg ) ) )
    {
        client->close();
-       usleep(100);
+       usleep(10);
        if ( ++checkNum > check_fail )
 	   break;
    }
@@ -294,7 +307,7 @@ void* propagateConsumer( void * index )
 		cout << "server " << id << " alive " << endl;
 		break;
 	    }
-	    usleep(1000);
+	    usleep(10000);
 	}
 	pthread_rwlock_wrlock( & pgmutex[id] );
 	if ( bufmsg[id].size() > 0 )
@@ -306,7 +319,7 @@ void* propagateConsumer( void * index )
 	    }
 	}
 	pthread_rwlock_unlock( & pgmutex[id] );
-	usleep(100);
+	usleep(10000);
     }	
 }
 
@@ -325,9 +338,25 @@ void addPropagate( const string& key, const string& value, long int timecount )
     {
 	if ( i == server_id )
 	    continue;
-        pthread_rwlock_wrlock( &pgmutex[i] );
-	bufmsg[i].push( ss.str() );
-	pthread_rwlock_unlock( &pgmutex[i] );	
+	thread_arg* data = new thread_arg();
+	data->message = ss.str();
+	data->id = i;
+	pthread_create( &propaThreads[i], NULL, dopropagate, (void* )data );
+    }
+    uintptr_t ret = true;
+    for( int i = 0; i < num_server; i++ )
+    {
+	if ( i == server_id )
+	    continue;
+        pthread_join( propaThreads[i], (void**)&ret );
+	if ( ret == 0 )
+	{
+	    cout << "returned false " << endl;
+	    pthread_rwlock_wrlock( &pgmutex[i] );
+	    bufmsg[i].push( ss.str() );
+	    pthread_rwlock_unlock( &pgmutex[i] );	
+	}
+
     }
 }
 
@@ -373,7 +402,7 @@ void start()
 	while ( true )
 	{
 		bool suc = sock.recvMessage( message );
-		cout << message << endl;
+		//cout << message << endl;
 		if ( ! suc )
 		{
 		    cout << "Receiving restart " << endl;
@@ -411,7 +440,7 @@ void start()
 		    }
 		    ss >> message;
 		    //waitUntilAll(10);
-		    usleep(100);
+		    //usleep(100);
 		    suc = sock.send ( message );
 		    if ( ! suc )
 		    {
@@ -606,7 +635,7 @@ int main(int argc, char** argv)
 	while ( ! recover() )
 	    sleep ( 1 );
     }
-    //pthread_create( &debugThread, NULL, debugFunction, NULL );
+    pthread_create( &debugThread, NULL, debugFunction, NULL );
     pthread_create( &pingThread, NULL, waitPing, NULL );
     startThreads( recoverThreads, waitRecover );
     startThreads( sendThreads, propagateConsumer );

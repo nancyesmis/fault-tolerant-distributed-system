@@ -201,6 +201,7 @@ int kv739_put(char* key, char* value, char* oldvalue)
 	return 1;
     }
     strcpy( oldvalue, ov.c_str() );
+    //usleep(100);
     return 0;
 }
 

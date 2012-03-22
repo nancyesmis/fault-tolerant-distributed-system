@@ -5,6 +5,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <fstream>
+#include <sys/time.h>
+
 using namespace std;
 
 
@@ -45,14 +47,16 @@ int main(int argc, char** argv)
     kv739_init( servers );
     int index = -1;
     int keyid = 0;
+    struct timeval start, end;
+    gettimeofday(&start, NULL);
     while ( true )
     {
 	index++;
 	sprintf(value, "%d", index );
-	//if ( index % 100 == 0 )
+	if ( index % 100 == 0 )
 	    sprintf(key, "%s%d", "key", keyid++);
 	//cout << index << ". sending " <<  value << endl;
-	/*
+	
 	for( int i = 0; i < 4; i++ )
 	{
 	    if ( i == index % 4 )
@@ -60,17 +64,22 @@ int main(int argc, char** argv)
 	    else
 		kv739_fail( servers[i] );	    
 	}
-	*/
+	
 	//kv739_recover( servers[ (index + 1) % 2] );
 	//cout << "before put " << endl;
 	kv739_put( key, value, oldvalue );
-	cout << oldvalue << endl;
+	//cout << oldvalue << endl;
 	if ( atoi(value ) - atoi(oldvalue) != 1 && atoi(value) % 100 != 0)
 	{
 	    //cout << oldvalue << ":" << value << endl;
 	    //cout << "inconsistency " << endl;
 	}
-	usleep(500000);
+	if ( index % 300 == 0 )
+	{
+	    gettimeofday( & end, NULL );
+	    cout << end.tv_sec - start.tv_sec << ":" << end.tv_usec - start.tv_usec << endl;
+	}
+	//usleep(500000);
 	//sleep(1);
 	//cin >> key >> value;
     }
