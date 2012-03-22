@@ -60,6 +60,11 @@ Socket* getSocket(char * key)
 	    cout << "No server is available " << endl;
 	    return NULL;	    
 	}
+	if ( slist[index].dead )
+	{
+	    index = ( index + 1 ) % snum;
+	    continue;
+	}
 	if ( socks[index] != NULL )
 	{
 	    return socks[index];
