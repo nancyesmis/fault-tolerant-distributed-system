@@ -37,6 +37,8 @@ pthread_t pingThread;
 
 queue<string>  bufmsg[ MAXSERVER ];
 
+struct timeval cur;
+
 void* waitRecover( void* id )
 {
     long index = (long)id;
@@ -125,16 +127,17 @@ void* waitUpdate(void* id)
 	while ( true )
 	{
 	    bool ret = sock.recvMessage( message );
+
 	    if ( ! ret )
 	    {
 		cout << " Propagate receive restart" << endl;
 		break;
 	    }
+	    pthread_rwlock_wrlock( &mutex );
 	    keys.clear();
 	    values.clear();
 	    curtimes.clear();
 	    getKeyValueTime( message, keys, values, curtimes );
-	    pthread_rwlock_wrlock( &mutex );
 	    for ( int i = 0; i < keys.size(); i++ )
 	    {
 		string& key = keys[i];
@@ -142,18 +145,27 @@ void* waitUpdate(void* id)
 		long int& curtime = curtimes[i];
     		bool update = false;
 		if ( !(database.find( key ) != database.end()
-		   && curtime < database[ key ].time) )
+		   && curtime + 10 < database[ key ].time ) )
 		{
 		    database[ key ].value = value;
 		    database[ key ].time = curtime;
 		    update = true;
+		}
+		else
+		{
+		    cout << key << ":" << value << ":" << database[key].value << "," << database[key].time << ":" << curtime << endl;
+		    cout << "****** drop update " << endl;
 		}
 		if ( update )
 		{
 		    checkRecoverPropagate( message, curtime, index );
 		}
 	    }
+	    sock.send("[]");
 	    pthread_rwlock_unlock( &mutex);
+	    //sock.send("[]");
+	    //gettimeofday(&cur, NULL );
+	    //cout << "received update " << message << cur.tv_sec << ":" << cur.tv_usec << endl;
 
 	}
 	sock.close();
@@ -232,10 +244,6 @@ void* dopropagate( void * data )
    thread_arg* arg = (thread_arg* )data;
    bool ret = propagateUpdate( arg->message, arg->id );
    delete arg;
-   uintptr_t v = 0;
-   if ( ret ) 
-       v = 1;
-   return (void*)v;
 }
 
 bool  propagateUpdate(const string& msg, long int id )
@@ -282,6 +290,8 @@ bool  propagateUpdate(const string& msg, long int id )
        if ( ++checkNum > check_fail )
 	   break;
    }
+   string ms;
+   ret = client->recvMessage( ms );
    if ( ! ret )
    {
        server_list[ id ].dead = true;
@@ -327,7 +337,7 @@ long int getCount()
 {
     struct timeval cur_time;
     gettimeofday( & cur_time, NULL );
-    return ( cur_time.tv_sec - TIME_BASE ) * 1000 + cur_time.tv_usec / 1000;
+    return ( cur_time.tv_sec - TIME_BASE ) * 10000 + cur_time.tv_usec / 100;
 }
 
 void addPropagate( const string& key, const string& value, long int timecount )
@@ -341,22 +351,21 @@ void addPropagate( const string& key, const string& value, long int timecount )
 	thread_arg* data = new thread_arg();
 	data->message = ss.str();
 	data->id = i;
-	pthread_create( &propaThreads[i], NULL, dopropagate, (void* )data );
+    	pthread_create( &propaThreads[i], NULL, dopropagate, (void* )data );
     }
-    uintptr_t ret = true;
     for( int i = 0; i < num_server; i++ )
     {
 	if ( i == server_id )
 	    continue;
-        pthread_join( propaThreads[i], (void**)&ret );
-	if ( ret == 0 )
+        pthread_join( propaThreads[i], NULL );
+	//cout << "after " << value << endl;
+	if ( server_list[i].dead )
 	{
-	    cout << "returned false " << endl;
+	    //cout << "add to buffer queue " << endl;
 	    pthread_rwlock_wrlock( &pgmutex[i] );
 	    bufmsg[i].push( ss.str() );
 	    pthread_rwlock_unlock( &pgmutex[i] );	
 	}
-
     }
 }
 
@@ -442,6 +451,8 @@ void start()
 		    //waitUntilAll(10);
 		    //usleep(100);
 		    suc = sock.send ( message );
+		    //gettimeofday( &cur, NULL);
+		    //cout << " returned " << value << cur.tv_sec << ":" << cur.tv_usec << endl;
 		    if ( ! suc )
 		    {
 			cout << " Server send restart" << endl;

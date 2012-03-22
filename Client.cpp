@@ -59,7 +59,7 @@ int main(int argc, char** argv)
 	
 	for( int i = 0; i < 4; i++ )
 	{
-	    if ( i == index % 4 )
+	    if ( i == index % 4  )
 		kv739_recover( servers[i] );
 	    else
 		kv739_fail( servers[i] );	    
@@ -69,10 +69,11 @@ int main(int argc, char** argv)
 	//cout << "before put " << endl;
 	kv739_put( key, value, oldvalue );
 	//cout << oldvalue << endl;
-	if ( atoi(value ) - atoi(oldvalue) != 1 && atoi(value) % 100 != 0)
+	//cout << value << endl;
+	if ( atoi(value ) - atoi(oldvalue) != 1 && atoi(value) % 100 != 0 && strlen(oldvalue) > 1)
 	{
-	    //cout << oldvalue << ":" << value << endl;
-	    //cout << "inconsistency " << endl;
+	    cout << oldvalue << ":" << value << endl;
+	    cout << "inconsistency " << endl;
 	}
 	if ( index % 300 == 0 )
 	{
