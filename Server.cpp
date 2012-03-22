@@ -121,7 +121,7 @@ void* waitUpdate(void* id)
     string message;
     vector<string> keys;
     vector<string> values;
-    vector<long int> curtimes;
+    vector<long long> curtimes;
     while ( true )
     {
 	server.accept( sock );
@@ -143,7 +143,7 @@ void* waitUpdate(void* id)
 	    {
 		string& key = keys[i];
 		string& value = values[i];
-		long int& curtime = curtimes[i];
+		long long& curtime = curtimes[i];
     		bool update = false;
 		if ( !(database.find( key ) != database.end()
 		   && curtime + 2 < database[ key ].time ) )
@@ -173,7 +173,7 @@ void* waitUpdate(void* id)
     }
 }
 
-void checkRecoverPropagate(const string& msg, const long int timecount, const int id)
+void checkRecoverPropagate(const string& msg, const long long timecount, const int id)
 {
     for ( int i = 0; i < num_server; i++ )
     {
@@ -247,7 +247,7 @@ void* dopropagate( void * data )
    delete arg;
 }
 
-bool  propagateUpdate(const string& msg, long int id )
+bool  propagateUpdate(const string& msg, long long id )
 {
    Socket* client;
    kv739_server* server = &(server_list [ id ]);
@@ -334,14 +334,14 @@ void* propagateConsumer( void * index )
     }	
 }
 
-long int getCount()
+long long getCount()
 {
     struct timeval cur_time;
     gettimeofday( & cur_time, NULL );
     return ( cur_time.tv_sec - TIME_BASE ) * 1000 + cur_time.tv_usec / 1000;
 }
 
-void addPropagate( const string& key, const string& value, long int timecount )
+void addPropagate( const string& key, const string& value, long long timecount )
 {
     stringstream ss;
     ss << key << '[' << value << ']'  << timecount << ']';
@@ -419,7 +419,7 @@ void* processreq(void * s)
 		{
 		    string& key = keys[i];
 		    string& value = values[i];
-		    long int timecount = getCount();
+		    long long timecount = getCount();
 		    pthread_rwlock_wrlock( &mutex );
 		    if ( database.find( key ) != database.end() )
 		    {
@@ -500,12 +500,12 @@ bool recover()
     return true;
 }
 
-long int recoverDatabase( char* data, bool ispartition)
+long long recoverDatabase( char* data, bool ispartition)
 {
     char* pos = strtok( data, "]" );
     char* pch1 = NULL;
     char* pch2 = NULL;
-    long int timecount = 0;
+    long long timecount = 0;
     pthread_rwlock_wrlock( &mutex );
     cout << database.size() << endl;
     while ( pos != NULL )

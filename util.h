@@ -31,7 +31,7 @@ struct KValue
          value = "";
 	 time = 0;
     }
-    KValue(const std::string& v, long int t)
+    KValue(const std::string& v, long long t)
     {
         value = v;
 	time = t;
@@ -42,7 +42,7 @@ struct KValue
 	time = copy.time;
     }
     std::string value;
-    long int time;
+    long long time;
 };
 
 std::string NOVALUE = "[]";
@@ -139,7 +139,7 @@ void getKeyValue( const std::string& message, std::vector<std::string>& key, std
 /*
  * Extract key, value, time from message
  */
-void getKeyValueTime( const std::string& message, std::vector<std::string>& key, std::vector<std::string>& value, std::vector<long int>& time)
+void getKeyValueTime( const std::string& message, std::vector<std::string>& key, std::vector<std::string>& value, std::vector<long long>& time)
 {
     size_t head = 0;
     size_t index1 = 0;

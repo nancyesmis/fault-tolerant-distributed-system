@@ -21,7 +21,7 @@ void startPropagateUpdate(const std::string& message);
 /*
  * Thread function to send updates to other servers
  */
-bool propagateUpdate(const std::string& msg, long int timecount);
+bool propagateUpdate(const std::string& msg, long long timecount);
 
 /*
  * thread function wait the updates from other server
@@ -38,17 +38,17 @@ void startServerUpdates();
 /*
  * return the current timeStamp
  */
-long int getCount();
+long long getCount();
 
 /*
  * recover database from char * get from other server
  */
-long int  recoverDatabase( char* data, bool ispartition );
+long long  recoverDatabase( char* data, bool ispartition );
 
 /*
  * Check if Forward message to the recovering server is needed
  */
-void checkRecoverPropagate(const std::string& msg, const long int timecount,
+void checkRecoverPropagate(const std::string& msg, const long long timecount,
 	const int id );
 
 /*
@@ -74,7 +74,7 @@ bool pingServer( int id );
 /*
  * Add message to propagate queue
  */
-void addPropagate( const std::string& key, const std::string& value, long int timecount );
+void addPropagate( const std::string& key, const std::string& value, long long timecount );
 
 /*
  * Debug thread
@@ -87,7 +87,7 @@ struct thread_arg
 {
     std::string message;
     int id;
-    long int timecount;
+    long long timecount;
 };
 
 /*
