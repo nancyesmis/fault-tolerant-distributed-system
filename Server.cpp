@@ -39,6 +39,7 @@ pthread_t reqThread;
 queue<string>  bufmsg[ MAXSERVER ];
 
 struct timeval cur;
+int timeerr = 2000;
 
 void* waitRecover( void* id )
 {
@@ -146,7 +147,7 @@ void* waitUpdate(void* id)
 		long long& curtime = curtimes[i];
     		bool update = false;
 		if ( !(database.find( key ) != database.end()
-		   && curtime + 2 < database[ key ].time ) )
+		   && curtime + timeerr < database[ key ].time ) )
 		{
 		    database[ key ].value = value;
 		    database[ key ].time = curtime;
@@ -515,7 +516,7 @@ long long recoverDatabase( char* data, bool ispartition)
 	pch2 = strchr( pch1 + 1, '[' );
         *pch2 = 0;
 	timecount = atol( pch2 + 1 );
-	if ( timecount >= database[ pos ].time )
+	if ( timecount >= database[ pos ].time + timeerr)
 	{
 	    database [ pos ].value = pch1 + 1;
 	    database [ pos ].time = timecount;
@@ -647,6 +648,10 @@ int main(int argc, char** argv)
     {
 	cout << "server id error" << endl;
 	exit(-1);
+    }
+    if ( argc > 2 )
+    {
+	timeerr = atoi( argv[2] );
     }
     startThreads( waitThreads, waitUpdate);
     if ( strcmp(argv[argc - 1], "recover") == 0 )
