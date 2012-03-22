@@ -346,7 +346,7 @@ void addPropagate( const string& key, const string& value, long long timecount )
     ss << key << '[' << value << ']'  << timecount << ']';
     for ( int i = 0; i < num_server; i++ )
     {
-	if ( i == server_id )
+	if ( i == server_id || server_list[i].dead )
 	    continue;
 	thread_arg* data = new thread_arg();
 	data->message = ss.str();
@@ -355,7 +355,7 @@ void addPropagate( const string& key, const string& value, long long timecount )
     }
     for( int i = 0; i < num_server; i++ )
     {
-	if ( i == server_id )
+	if ( i == server_id || server_list[i].dead )
 	    continue;
 	cout << "before join " << i << endl;
         pthread_join( propaThreads[i], NULL );
