@@ -355,10 +355,13 @@ void addPropagate( const string& key, const string& value, long long timecount )
     }
     for( int i = 0; i < num_server; i++ )
     {
-	if ( i == server_id || server_list[i].dead )
+	if ( i == server_id)
 	    continue;
 	//cout << "before join " << i << endl;
-        pthread_join( propaThreads[i], NULL );
+	if ( ! server_list[i].dead )
+	{
+	    pthread_join( propaThreads[i], NULL );
+	}
 	//cout << "after join " << i << endl;
 	if ( server_list[i].dead )
 	{
