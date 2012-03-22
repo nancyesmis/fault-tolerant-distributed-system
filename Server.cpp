@@ -283,8 +283,6 @@ bool  propagateUpdate(const string& msg, long long id )
    if ( ! client->setTimeout(1, 3) )
        cout << "set timeout propagate" << endl;
    checkNum = 0;
-   if (  ! client->setTimeout(1, 3) )
-	cout << "propagate timeout restart " << endl;
    while ( !( ret = client->send( msg ) ) )
    {
        client->close();
@@ -359,8 +357,9 @@ void addPropagate( const string& key, const string& value, long long timecount )
     {
 	if ( i == server_id )
 	    continue;
+	cout << "before join " << i << endl;
         pthread_join( propaThreads[i], NULL );
-	//cout << "after " << value << endl;
+	cout << "after join " << i << endl;
 	if ( server_list[i].dead )
 	{
 	    //cout << "add to buffer queue " << endl;
