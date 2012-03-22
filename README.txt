@@ -3,7 +3,8 @@ Install:
 (2) tar -xvf fault-tolerant-distributed-system.tar
 (3) get in to fault-toerant-distributed-system directory
 (4) change the 4 IPs in servers.sh to the 4 servers IP. *Do not change the ports in the 2nd line*
-(5) ./deploy.sh
+(5) install g++  and make in the 4 servers.
+(6) ./deploy.sh
 
 
 
