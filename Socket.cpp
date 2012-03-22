@@ -275,7 +275,7 @@ int Socket::recv ( char* buf, int max) const
 
   if ( status == -1 )
     {
-      std::cout << "Receive error: " << errno << " in Socket::recv\n";
+      //std::cout << "Receive error: " << errno << " in Socket::recv\n";
     }
   return status;
 }

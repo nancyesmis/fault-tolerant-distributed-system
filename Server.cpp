@@ -92,7 +92,7 @@ void startRecoverServer()
 	    continue;
         int status = pthread_create( &recoverThreads[ i ], NULL, waitRecover, (void* )i );
         if ( status != 0 )
-	   cout << "creaing waiting status error " << endl;
+	   cout << "creaing waiting status " << endl;
     }
 }
 
@@ -180,7 +180,7 @@ void startServerUpdates()
 	   continue;
        int status = pthread_create( &waitThreads[ i ], NULL, waitUpdate, (void* )i);
        if ( status != 0 )
-	   cout << "creaing waiting status error " << endl;
+	   cout << "creaing waiting status " << endl;
    } 
 }
 
@@ -190,7 +190,7 @@ void init()
     iff.open( "config.txt" );
     if ( iff.fail() )
     {
-        cout << "Open config.txt error " << endl;
+        cout << "Open config.txt error" << endl;
 	exit(-1);
     }
     string line;
@@ -447,7 +447,7 @@ bool recover()
     bool ret = client->send( msg );
     if ( ! ret )
     {
-        cout << "Sending recover ack error" << endl;
+        cout << "Sending recover ack" << endl;
     }
     cout << "Recovered from server " << id << endl;
     delete client;
@@ -517,7 +517,7 @@ Socket* chooseRecoverServer( int& id )
         bool ret = client->connect( server_list[index].hostname, server_list[ server_id ].recover_port );
 	if ( ! ret )
 	{
-	    cout << "Connecting recover server error " << endl;
+	    cout << "Connecting recover server " << endl;
 	    delete client;
 	    return NULL;
 	}
@@ -557,7 +557,7 @@ void startThreads( pthread_t* ts, void * (func) (void * ) )
 	   continue;
        int status = pthread_create( & ts[ i ], NULL, func, (void* )i);
        if ( status != 0 )
-	   cout << "creaing waiting status error " << endl;
+	   cout << "creaing waiting status" << endl;
    }
 }
 

@@ -136,7 +136,7 @@ void kv739_fail(char* server)
     {
 	if ( slist[i].hostname.compare(host) == 0 && slist[i].port == port )
 	{
-	    slist[i].dead = false;
+	    slist[i].dead = true;
 	    return;
 	}
     }
