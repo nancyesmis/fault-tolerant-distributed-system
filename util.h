@@ -9,6 +9,7 @@
 #include <vector>
 #include <ifaddrs.h>
 #include <sys/time.h>
+#include <sstream>
 
 struct kv739_server
 {
@@ -141,7 +142,16 @@ long long getCount()
 {
     struct timeval cur_time;
     gettimeofday( & cur_time, NULL );
-    return ( cur_time.tv_sec - TIME_BASE ) * (long long )100000 + cur_time.tv_usec / 10 ;
+    return ( cur_time.tv_sec - TIME_BASE ) * (long long )1000000 + cur_time.tv_usec ;
+}
+
+long long gettimestamp( const std::string & str )
+{
+    std::stringstream ss;
+    long long cur;
+    ss << str;
+    ss >> cur;
+    return cur;
 }
 
 /*
@@ -153,6 +163,7 @@ void getKeyValueTime( const std::string& message, std::vector<std::string>& key,
     size_t index1 = 0;
     size_t index2 = 0;
     size_t index3 = 0;
+    long long curtime = 0;
     for( size_t i = 0; i < message.size(); i++ )
     {
 	if ( message[i] == '[' )
@@ -166,7 +177,7 @@ void getKeyValueTime( const std::string& message, std::vector<std::string>& key,
 		index3 = i;
 		key.push_back( message.substr( head, index1 - head ) );
 		value.push_back( message.substr( index1 + 1, index2 - index1 - 1 ) );
-		time.push_back( atol( message.substr( index2 + 1, index3 - index2 - 1).c_str() ) );
+    	    	time.push_back( gettimestamp(message.substr( index2 + 1, index3 - index2 - 1) ) );
 		head = index3 + 1;
 		//std::cout << head << ':' << index1 << ':' << index2 << ':' << index3 << std::endl;
 	    }

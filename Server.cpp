@@ -518,7 +518,7 @@ long long recoverDatabase( char* data, bool ispartition)
 	*pch1 = 0;
 	pch2 = strchr( pch1 + 1, '[' );
         *pch2 = 0;
-	timecount = atol( pch2 + 1 );
+	timecount = gettimestamp( pch2 + 1 );
 	if ( timecount >= database[ pos ].time )
 	{
 	    database [ pos ].value = pch1 + 1;
