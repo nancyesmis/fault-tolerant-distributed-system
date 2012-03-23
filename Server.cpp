@@ -149,6 +149,8 @@ void* waitUpdate(void* id)
 		if ( !(database.find( key ) != database.end()
 		   && curtime < database[ key ].time ) )
 		{
+		    if ( atoi(value.c_str()) < atoi(database[key].value.c_str()) )
+			cout << key << ":" << value << ":" << database[key].value << ":" << curtime << ":" << database[key].time << endl;
 		    database[ key ].value = value;
 		    database[ key ].time = curtime;
 		    update = true;
