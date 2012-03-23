@@ -174,7 +174,7 @@ int kv739_get(char* key, char* value)
 int kv739_put(char* key, char* value, char* oldvalue)
 {
     //cout << "sending " << key << ':' << value << endl;
-    usleep(10);
+    usleep(100);
     long long timecount = getCount();
     Socket* client = getSocket( key );
     if ( client == NULL )
