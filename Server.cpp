@@ -657,15 +657,16 @@ int main(int argc, char** argv)
 	cout << "server id error" << endl;
 	exit(-1);
     }
-    if ( argc > 2 )
-    {
-	timeerr = 1;
-    }
     startThreads( waitThreads, waitUpdate);
     if ( strcmp(argv[argc - 1], "recover") == 0 )
     {
 	while ( ! recover() )
 	    sleep ( 1 );
+    }
+    else if ( strcmp( argv[argc - 1], "client" ) == 0 )
+    {
+	timeerr = 1;
+	cout << "using client time " << endl;
     }
     pthread_create( &debugThread, NULL, debugFunction, NULL );
     pthread_create( &pingThread, NULL, waitPing, NULL );
