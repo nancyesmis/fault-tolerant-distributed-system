@@ -38,7 +38,7 @@ void startServerUpdates();
 /*
  * return the current timeStamp
  */
-long long getCount();
+//long long getCount();
 
 /*
  * recover database from char * get from other server

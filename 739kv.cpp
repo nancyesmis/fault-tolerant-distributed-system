@@ -171,13 +171,6 @@ int kv739_get(char* key, char* value)
     return kv739_put( key, const_cast<char*>(""), value );
 }
 
-long long getCount()
-{
-    struct timeval cur_time;
-    gettimeofday( & cur_time, NULL );
-    return ( cur_time.tv_sec - TIME_BASE ) * (long long )1000 + cur_time.tv_usec / 1000;
-}
-
 int kv739_put(char* key, char* value, char* oldvalue)
 {
     //cout << "sending " << key << ':' << value << endl;

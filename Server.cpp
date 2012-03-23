@@ -335,13 +335,6 @@ void* propagateConsumer( void * index )
     }	
 }
 
-long long getCount()
-{
-    struct timeval cur_time;
-    gettimeofday( & cur_time, NULL );
-    return ( cur_time.tv_sec - TIME_BASE ) * (long long )1000 + cur_time.tv_usec / 1000;
-}
-
 void addPropagate( const string& key, const string& value, long long timecount )
 {
     stringstream ss;

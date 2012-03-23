@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <vector>
 #include <ifaddrs.h>
+#include <sys/time.h>
 
 struct kv739_server
 {
@@ -134,6 +135,13 @@ void getKeyValue( const std::string& message, std::vector<std::string>& key, std
 	    head = index2 + 1;
 	}
     }
+}
+
+long long getCount()
+{
+    struct timeval cur_time;
+    gettimeofday( & cur_time, NULL );
+    return ( cur_time.tv_sec - TIME_BASE ) * (long long )100000 + cur_time.tv_usec / 10;
 }
 
 /*
