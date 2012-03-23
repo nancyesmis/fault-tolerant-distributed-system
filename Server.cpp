@@ -324,10 +324,16 @@ void* propagateConsumer( void * index )
 	pthread_rwlock_wrlock( & pgmutex[id] );
 	if ( bufmsg[id].size() > 0 )
 	{
-	    ret = propagateUpdate( bufmsg[id].front() , id );
-	    if ( ret )
+	    stringstream ss;
+	    for ( int i = 0; i < bufmsg[id].size(); i++ )
 	    {
-	        bufmsg[id].pop(); 
+		ss << bufmsg[id].front();
+		bufmsg[id].pop();
+	    }		
+	    ret = propagateUpdate( ss.str() , id );
+	    if ( ! ret )
+	    {
+	        bufmsg[id].push(ss.str() ); 
 	    }
 	}
 	pthread_rwlock_unlock( & pgmutex[id] );
