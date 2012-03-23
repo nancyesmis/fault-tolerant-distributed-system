@@ -157,8 +157,8 @@ void* waitUpdate(void* id)
 		}
 		else
 		{
-		    cout << key << ":" << value << ":" << database[key].value << "," << curtime << ":" << database[key].time << endl;
-		    cout << "****** drop update " << endl;
+		    //cout << key << ":" << value << ":" << database[key].value << "," << curtime << ":" << database[key].time << endl;
+		    //cout << "****** drop update " << endl;
 		}
 		if ( update )
 		{
