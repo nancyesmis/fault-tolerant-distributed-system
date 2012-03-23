@@ -24,7 +24,8 @@ kv739_server server_list[ MAXSERVER ];
 Socket* pgsocks[ MAXSERVER ];
 
 pthread_rwlock_t mutex = PTHREAD_RWLOCK_INITIALIZER;
-pthread_rwlock_t pgmutex[ MAXSERVER ];
+pthread_mutex_t pgmutex[ MAXSERVER ];
+pthread_mutex_t sckmutex[ MAXSERVER ];
 
 pthread_t waitThreads[ MAXSERVER ];
 pthread_t sendThreads[ MAXSERVER ];
@@ -182,9 +183,9 @@ void checkRecoverPropagate(const string& msg, const long long timecount, const i
     {
         if ( i != server_id && server_list[ i ].isrecover )
 	{
-	    pthread_rwlock_wrlock( &pgmutex[i] );
+	    pthread_mutex_lock( &pgmutex[i] );
 	    bufmsg[i].push( msg );
-	    pthread_rwlock_unlock( &pgmutex[i] );
+	    pthread_mutex_unlock( &pgmutex[i] );
 	}
     }
 }
@@ -237,7 +238,8 @@ void init()
     for ( int i = 0; i < MAXSERVER; i++ )
     {
 	pgsocks[i] = NULL;
-	pthread_rwlock_init( &pgmutex[i], NULL);
+	pthread_mutex_init( &pgmutex[i], NULL);
+	pthread_mutex_init( &sckmutex[i], NULL);
     }
     num_server = lnum;
     iff.close();
@@ -246,7 +248,9 @@ void init()
 void* dopropagate( void * data )
 {
    thread_arg* arg = (thread_arg* )data;
+   pthread_mutex_lock ( & sckmutex[arg->id] );
    bool ret = propagateUpdate( arg->message, arg->id );
+   pthread_mutex_unlock( &sckmutex[arg->id] );
    delete arg;
 }
 
@@ -321,23 +325,29 @@ void* propagateConsumer( void * index )
 	    }
 	    usleep(10000);
 	}
-	pthread_rwlock_wrlock( & pgmutex[id] );
 	if ( bufmsg[id].size() > 0 )
 	{
 	    stringstream ss;
+            pthread_mutex_lock( & pgmutex[id] );
 	    for ( int i = 0; i < bufmsg[id].size(); i++ )
 	    {
 		ss << bufmsg[id].front();
 		bufmsg[id].pop();
-	    }		
+	    }	
+	    pthread_mutex_unlock( & pgmutex[id] );
+	    pthread_mutex_lock( &sckmutex[id] );
 	    ret = propagateUpdate( ss.str() , id );
+	    pthread_mutex_unlock( &sckmutex[id] );
 	    if ( ! ret )
 	    {
+		pthread_mutex_lock( & pgmutex[id] );
 	        bufmsg[id].push(ss.str() ); 
+	        pthread_mutex_unlock( & pgmutex[id] );
 	    }
 	}
-	pthread_rwlock_unlock( & pgmutex[id] );
-	usleep(10000);
+
+	if ( bufmsg[id].size() == 0 )
+	    usleep(10000);
     }	
 }
 
@@ -361,9 +371,9 @@ void addPropagate( const string& key, const string& value, long long timecount )
 	//cout << "before join " << i << endl;
 	if ( server_list[i].dead )
 	{
-	    pthread_rwlock_wrlock( &pgmutex[i] );
+	    pthread_mutex_lock( &pgmutex[i] );
 	    bufmsg[i].push( ss.str() );
-	    pthread_rwlock_unlock( &pgmutex[i] );
+	    pthread_mutex_unlock( &pgmutex[i] );
 	    continue;
 	}
 	pthread_join( propaThreads[i], NULL );
@@ -371,9 +381,9 @@ void addPropagate( const string& key, const string& value, long long timecount )
 	if ( server_list[i].dead )
 	{
 	    //cout << "add to buffer queue " << endl;
-	    pthread_rwlock_wrlock( &pgmutex[i] );
+	    pthread_mutex_lock( &pgmutex[i] );
 	    bufmsg[i].push( ss.str() );
-	    pthread_rwlock_unlock( &pgmutex[i] );	
+	    pthread_mutex_unlock( &pgmutex[i] );	
 	}
     }
 }
