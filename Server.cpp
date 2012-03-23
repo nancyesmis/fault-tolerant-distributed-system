@@ -450,11 +450,11 @@ void* processreq(void * s)
 		    pthread_rwlock_unlock( &mutex );
 		    if ( value.size() != 0 )
 		    {
-			cout << " before add propagate " << endl;
+			//cout << " before add propagate " << endl;
 			pthread_mutex_lock( &addpro );
 			addPropagate( key, value, timecount);
 			pthread_mutex_unlock( &addpro );
-			cout << " after ad propagate " << endl;
+			//cout << " after ad propagate " << endl;
 		    }
 		    ss >> message;
 		    //waitUntilAll(10);
@@ -483,7 +483,7 @@ void start()
     while ( true )
     {
 	Socket* sock = new Socket();
-	cout << " new client " << endl;
+	//cout << " new client " << endl;
 	server.accept ( *sock );
 	sock->setTimeout(1, 2);
 	pthread_create( &reqThread, NULL, processreq, (void*)sock);
