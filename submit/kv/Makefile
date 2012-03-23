@@ -14,5 +14,5 @@ kv739.so: 739kv.o
 739kv.o: 739kv.cpp 739kv.h util.h
 	$(CC) $(FLAGS) -c -fPIC 739kv.cpp
 clean:
-	rm -f client server *.o lib739kv.so
+	rm -f client server *.o lib739kv.so config.txt servers.sh
 

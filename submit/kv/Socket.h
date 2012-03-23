@@ -15,8 +15,8 @@
 #include <arpa/inet.h>
 
 
-const int MAXCONNECTIONS = 5;
-const int MAXBUFFER = 2500;
+const int MAXCONNECTIONS = 5000;
+const int MAXBUFFER = 25000;
 
 class Socket
 {

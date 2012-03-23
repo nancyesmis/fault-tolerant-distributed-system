@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <sstream>
 #include <cstring>
+#include <sys/time.h>
 using namespace std;
 
 struct kv739_server slist[MAXSERVER];
@@ -64,7 +65,7 @@ Socket* getSocket(char * key)
 	{
 	    index = ( index + 1 ) % snum;
 	    continue;
-	}	
+	}
 	if ( socks[index] != NULL )
 	{
 	    return socks[index];
@@ -85,8 +86,7 @@ Socket* getSocket(char * key)
 	index = ( index + 1 ) % snum;
     }
 
-    if ( ! client->setTimeout(1, 3) )
-	cout << "set timeout unsuccessfull" <<endl;
+    client->setTimeout(10, 3);
     socks[ index ] = client;
     return client;
 }
@@ -114,8 +114,6 @@ void kv739_init(char* servers[])
 	slist[i].dead = false;
 	temp = temp.substr(pos + 1, temp.size() - pos);
 	slist[i].port = atoi(temp.c_str());
-
-	//cout << i << slist[i].port << endl;
     }
     return;
 }
@@ -173,15 +171,16 @@ int kv739_get(char* key, char* value)
     return kv739_put( key, const_cast<char*>(""), value );
 }
 
-
 int kv739_put(char* key, char* value, char* oldvalue)
 {
     //cout << "sending " << key << ':' << value << endl;
+    //usleep(1000);
+    long long timecount = getCount();
     Socket* client = getSocket( key );
     if ( client == NULL )
        return -1;	
     stringstream ss;
-    ss << key << '[' << value << ']';
+    ss << key << '[' << value << ']' << timecount << ']';
     bool ret = client->send( ss.str() );
     if ( ! ret )
     {
@@ -193,7 +192,7 @@ int kv739_put(char* key, char* value, char* oldvalue)
     ret = client->recvMessage( feedback );
     if ( ! ret )
     {
-	cout << feedback << endl;
+	//cout << feedback << endl;
         cout << "Receiving restart " << endl;
 	setSockNull(client);
 	return kv739_put(key, value, oldvalue);
@@ -203,8 +202,8 @@ int kv739_put(char* key, char* value, char* oldvalue)
     {
 	return 1;
     }
-    //may need to check overflow
     strcpy( oldvalue, ov.c_str() );
+    //usleep(100);
     return 0;
 }
 
