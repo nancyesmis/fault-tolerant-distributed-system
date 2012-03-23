@@ -39,7 +39,7 @@ pthread_t reqThread;
 queue<string>  bufmsg[ MAXSERVER ];
 
 struct timeval cur;
-int timeerr = 2000;
+int timeerr = 0;
 
 void* waitRecover( void* id )
 {
@@ -147,7 +147,7 @@ void* waitUpdate(void* id)
 		long long& curtime = curtimes[i];
     		bool update = false;
 		if ( !(database.find( key ) != database.end()
-		   && curtime + timeerr < database[ key ].time ) )
+		   && curtime < database[ key ].time ) )
 		{
 		    database[ key ].value = value;
 		    database[ key ].time = curtime;
@@ -155,7 +155,7 @@ void* waitUpdate(void* id)
 		}
 		else
 		{
-		    cout << key << ":" << value << ":" << database[key].value << "," << database[key].time << ":" << curtime << endl;
+		    cout << key << ":" << value << ":" << database[key].value << "," << curtime << ":" << database[key].time << endl;
 		    cout << "****** drop update " << endl;
 		}
 		if ( update )
@@ -358,10 +358,14 @@ void addPropagate( const string& key, const string& value, long long timecount )
 	if ( i == server_id)
 	    continue;
 	//cout << "before join " << i << endl;
-	if ( ! server_list[i].dead )
+	if ( server_list[i].dead )
 	{
-	    pthread_join( propaThreads[i], NULL );
+	    pthread_rwlock_wrlock( &pgmutex[i] );
+	    bufmsg[i].push( ss.str() );
+	    pthread_rwlock_unlock( &pgmutex[i] );
+	    continue;
 	}
+	pthread_join( propaThreads[i], NULL );
 	//cout << "after join " << i << endl;
 	if ( server_list[i].dead )
 	{
@@ -402,6 +406,7 @@ void* processreq(void * s)
     string message;
     vector<string> keys;
     vector<string> values;
+    vector<long long > times;
     stringstream ss;
     	while ( true )
 	{
@@ -416,13 +421,14 @@ void* processreq(void * s)
 		keys.clear();
 		values.clear();
 		bool propagated = false;
-		getKeyValue(message, keys, values);
+		getKeyValueTime(message, keys, values, times);
 		ss.clear();
 		for( int i = 0; i < keys.size(); i ++ )
 		{
 		    string& key = keys[i];
 		    string& value = values[i];
-		    long long timecount = getCount();
+
+		    long long timecount = (timeerr == 1 )? times[i] : getCount();
 		    pthread_rwlock_wrlock( &mutex );
 		    if ( database.find( key ) != database.end() )
 		    {
@@ -518,7 +524,7 @@ long long recoverDatabase( char* data, bool ispartition)
 	pch2 = strchr( pch1 + 1, '[' );
         *pch2 = 0;
 	timecount = atol( pch2 + 1 );
-	if ( timecount >= database[ pos ].time + timeerr)
+	if ( timecount >= database[ pos ].time )
 	{
 	    database [ pos ].value = pch1 + 1;
 	    database [ pos ].time = timecount;
@@ -653,7 +659,7 @@ int main(int argc, char** argv)
     }
     if ( argc > 2 )
     {
-	timeerr = atoi( argv[2] );
+	timeerr = 1;
     }
     startThreads( waitThreads, waitUpdate);
     if ( strcmp(argv[argc - 1], "recover") == 0 )
