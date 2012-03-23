@@ -266,7 +266,7 @@ bool  propagateUpdate(const string& msg, long long id )
        while ( !( ret = client->connect( server->hostname, server_list[ server_id ].port ) ) )
        {
            client->close();
-	   usleep(10);
+	   usleep(100);
            if ( ++checkNum > check_fail )
 	       break;
        }
@@ -288,7 +288,7 @@ bool  propagateUpdate(const string& msg, long long id )
    while ( !( ret = client->send( msg ) ) )
    {
        client->close();
-       usleep(10);
+       usleep(100);
        if ( ++checkNum > check_fail )
 	   break;
    }
