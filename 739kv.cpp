@@ -86,7 +86,7 @@ Socket* getSocket(char * key)
 	index = ( index + 1 ) % snum;
     }
 
-    client->setTimeout(1, 3);
+    client->setTimeout(10, 3);
     socks[ index ] = client;
     return client;
 }
