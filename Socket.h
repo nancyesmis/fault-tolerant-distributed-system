@@ -16,7 +16,7 @@
 
 
 const int MAXCONNECTIONS = 5000;
-const int MAXBUFFER = 2500;
+const int MAXBUFFER = 25000;
 
 class Socket
 {

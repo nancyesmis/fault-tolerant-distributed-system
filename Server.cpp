@@ -130,7 +130,6 @@ void* waitUpdate(void* id)
 	while ( true )
 	{
 	    bool ret = sock.recvMessage( message );
-
 	    if ( ! ret )
 	    {
 		cout << " Propagate receive restart" << endl;
@@ -277,7 +276,7 @@ bool  propagateUpdate(const string& msg, long long id )
        if ( ! ret )
        {
            server_list[ id ].dead = true;
-           cout << "Server " << id << " is dead"  << endl;
+           cout << "connect:Server " << id << " is dead"  << endl;
            client->close();
            return false;
        }
@@ -286,7 +285,7 @@ bool  propagateUpdate(const string& msg, long long id )
            pgsocks[ id ] = client;
        }
    }
-   if ( ! client->setTimeout(1, 3) )
+   if ( ! client->setTimeout(1, 1) )
        cout << "set timeout propagate" << endl;
    checkNum = 0;
    while ( !( ret = client->send( msg ) ) )
@@ -303,7 +302,7 @@ bool  propagateUpdate(const string& msg, long long id )
        server_list[ id ].dead = true;
        delete pgsocks[ id ];
        pgsocks[ id ] = NULL;
-       cout << "Server  " << id << " is dead" << endl;
+       cout << "send,recv:Server  " << id << " is dead" << endl;
        return false;
    }
    return true;
@@ -328,21 +327,14 @@ void* propagateConsumer( void * index )
 	if ( bufmsg[id].size() > 0 )
 	{
 	    stringstream ss;
-            pthread_mutex_lock( & pgmutex[id] );
-	    for ( int i = 0; i < bufmsg[id].size(); i++ )
-	    {
-		ss << bufmsg[id].front();
+            pthread_mutex_lock( & sckmutex[id] );
+	    bool ret = ret = propagateUpdate( bufmsg[id].front() , id );
+	    pthread_mutex_unlock( & sckmutex[id] );
+	    if ( ret )
+	    {	
+		pthread_mutex_lock( &pgmutex[id] );
 		bufmsg[id].pop();
-	    }	
-	    pthread_mutex_unlock( & pgmutex[id] );
-	    pthread_mutex_lock( &sckmutex[id] );
-	    ret = propagateUpdate( ss.str() , id );
-	    pthread_mutex_unlock( &sckmutex[id] );
-	    if ( ! ret )
-	    {
-		pthread_mutex_lock( & pgmutex[id] );
-	        bufmsg[id].push(ss.str() ); 
-	        pthread_mutex_unlock( & pgmutex[id] );
+		pthread_mutex_unlock( &pgmutex[id] );
 	    }
 	}
 
