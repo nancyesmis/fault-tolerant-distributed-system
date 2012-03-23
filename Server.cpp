@@ -26,6 +26,7 @@ Socket* pgsocks[ MAXSERVER ];
 pthread_rwlock_t mutex = PTHREAD_RWLOCK_INITIALIZER;
 pthread_mutex_t pgmutex[ MAXSERVER ];
 pthread_mutex_t sckmutex[ MAXSERVER ];
+pthread_mutex_t addpro = PTHREAD_MUTEX_INITIALIZER;
 
 pthread_t waitThreads[ MAXSERVER ];
 pthread_t sendThreads[ MAXSERVER ];
@@ -449,7 +450,9 @@ void* processreq(void * s)
 		    pthread_rwlock_unlock( &mutex );
 		    if ( value.size() != 0 )
 		    {
+			pthread_mutex_lock( &addpro );
 			addPropagate( key, value, timecount);
+			pthread_mutex_unlock( &addpro );
 		    }
 		    ss >> message;
 		    //waitUntilAll(10);
@@ -478,6 +481,7 @@ void start()
     while ( true )
     {
 	Socket* sock = new Socket();
+	cout << " new client " << endl;
 	server.accept ( *sock );
 	sock->setTimeout(1, 2);
 	pthread_create( &reqThread, NULL, processreq, (void*)sock);
