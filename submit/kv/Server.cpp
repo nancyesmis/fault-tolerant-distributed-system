@@ -42,7 +42,7 @@ queue<string>  bufmsg[ MAXSERVER ];
 
 struct timeval cur;
 int timeerr = 0;
-
+bool forward = false;
 void* waitRecover( void* id )
 {
     long index = (long)id;
@@ -133,6 +133,8 @@ void* waitUpdate(void* id)
 	    bool ret = sock.recvMessage( message );
 	    if ( ! ret )
 	    {
+		if ( message.size() > 10 )
+		    sleep(1);
 		cout << " Propagate receive restart" << endl;
 		break;
 	    }
@@ -150,8 +152,8 @@ void* waitUpdate(void* id)
 		if ( !(database.find( key ) != database.end()
 		   && curtime < database[ key ].time ) )
 		{
-		    if ( atoi(value.c_str()) < atoi(database[key].value.c_str()) )
-			cout << key << ":" << value << ":" << database[key].value << ":" << curtime << ":" << database[key].time << endl;
+		    //if ( atoi(value.c_str()) < atoi(database[key].value.c_str()) )
+			//cout << key << ":" << value << ":" << database[key].value << ":" << curtime << ":" << database[key].time << endl;
 		    database[ key ].value = value;
 		    database[ key ].time = curtime;
 		    update = true;
@@ -181,7 +183,7 @@ void checkRecoverPropagate(const string& msg, const long long timecount, const i
 {
     for ( int i = 0; i < num_server; i++ )
     {
-        if ( i != server_id && server_list[ i ].isrecover )
+        if ( i != server_id && ( server_list[ i ].isrecover || forward && server_list[i].dead ) )
 	{
 	    pthread_mutex_lock( &pgmutex[i] );
 	    bufmsg[i].push( msg );
@@ -667,17 +669,25 @@ int main(int argc, char** argv)
 	exit(-1);
     }
     startThreads( waitThreads, waitUpdate);
-    if ( strcmp(argv[argc - 1], "recover") == 0 )
+    for ( int i = 2; i < argc;i++ )
     {
-	while ( ! recover() )
-	    sleep ( 1 );
+	if ( strcmp( argv[i], "recover") == 0 )
+	{
+	    while ( ! recover() )
+		sleep ( 1 );
+	}
+	else if ( strcmp ( argv[i], "client" ) == 0 )
+	{
+	    timeerr = 1;
+	    cout << "using client time  " << endl;	    
+	}
+	else if ( strcmp ( argv[i], "forward" ) == 0 )
+	{
+	    forward = true;
+	    cout << "using forward" << endl;
+	}
     }
-    else if ( strcmp( argv[argc - 1], "client" ) == 0 )
-    {
-	timeerr = 1;
-	cout << "using client time " << endl;
-    }
-    pthread_create( &debugThread, NULL, debugFunction, NULL );
+    //pthread_create( &debugThread, NULL, debugFunction, NULL );
     pthread_create( &pingThread, NULL, waitPing, NULL );
     startThreads( recoverThreads, waitRecover );
     startThreads( sendThreads, propagateConsumer );
