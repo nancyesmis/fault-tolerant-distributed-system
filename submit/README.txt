@@ -13,3 +13,5 @@ Kill/Recover a node
 (*) Before using the system, we need to make sure the time of the servers are synchronized or we can use the client's time as timestamp;
 (*) The ip address should not change during the reboot
 (*) The port number of different servers in config.txt should be different
+(*) We can either forward the message when partition exists or not use
+argument "forward" to activate it
