@@ -150,7 +150,7 @@ void* waitUpdate(void* id)
 		long long& curtime = curtimes[i];
     		bool update = false;
 		if ( !(database.find( key ) != database.end()
-		   && curtime <= database[ key ].time ) )
+		   && curtime < database[ key ].time ) )
 		{
 		    //if ( atoi(value.c_str()) < atoi(database[key].value.c_str()) )
 			//cout << key << ":" << value << ":" << database[key].value << ":" << curtime << ":" << database[key].time << endl;
