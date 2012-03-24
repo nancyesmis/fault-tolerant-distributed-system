@@ -426,6 +426,7 @@ void* processreq(void * s)
 		//cout << message << endl;
 		keys.clear();
 		values.clear();
+                times.clear();
 		bool propagated = false;
 		getKeyValueTime(message, keys, values, times);
 		ss.clear();
