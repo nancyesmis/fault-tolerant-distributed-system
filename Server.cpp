@@ -670,12 +670,14 @@ int main(int argc, char** argv)
 	exit(-1);
     }
     startThreads( waitThreads, waitUpdate);
+    pthread_create( &pingThread, NULL, waitPing, NULL );
     for ( int i = 2; i < argc;i++ )
     {
 	if ( strcmp( argv[i], "recover") == 0 )
 	{
 	    while ( ! recover() )
 		sleep ( 1 );
+	    sleep ( 2 );
 	}
 	else if ( strcmp ( argv[i], "client" ) == 0 )
 	{
@@ -689,7 +691,6 @@ int main(int argc, char** argv)
 	}
     }
     //pthread_create( &debugThread, NULL, debugFunction, NULL );
-    pthread_create( &pingThread, NULL, waitPing, NULL );
     startThreads( recoverThreads, waitRecover );
     startThreads( sendThreads, propagateConsumer );
     start();
