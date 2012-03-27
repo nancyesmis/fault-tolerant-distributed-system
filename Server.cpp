@@ -544,7 +544,7 @@ long long recoverDatabase( char* data, bool ispartition)
 	pos = strtok( NULL, "]" );
     }
     pthread_rwlock_unlock( &mutex );
-    delete data;
+    delete[] data;
     return 0;
 }
 

@@ -242,6 +242,10 @@ public:
 	    ret += SIZE;
 	return ret;
     }
+    ~Bufque()
+    {
+	delete[] data;
+    }
 };
 
 #endif
